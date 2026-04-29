@@ -79,6 +79,14 @@ jobs:
             HEAD="${{ github.sha }}"
           fi
 
+          # When a new feature branch is pushed for the first time, github.event.before
+          # is the null-SHA. Fall back to merge-base with main so git diff has both ends.
+          if [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+            git fetch origin main:refs/remotes/origin/main 2>/dev/null || true
+            BASE=$(git merge-base origin/main "$HEAD")
+            echo "First push of branch detected; using merge-base with main as BASE: $BASE"
+          fi
+
           CHANGED=$(git diff --name-only "$BASE" "$HEAD")
           echo "Changed files:"
           echo "$CHANGED"
