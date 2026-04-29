@@ -13,6 +13,8 @@ from __future__ import annotations
 from fastapi import FastAPI
 
 from lore_eligibility import __version__
+from lore_eligibility.bootstrapper.logging_config import configure_logging
+from lore_eligibility.bootstrapper.settings import get_settings
 
 
 def create_app() -> FastAPI:
@@ -21,6 +23,13 @@ def create_app() -> FastAPI:
     Returns:
         Configured FastAPI app with /health and metadata.
     """
+    settings = get_settings()
+
+    # Configure PII-redacting structured logging before any code path can
+    # emit a log record. JSON output in non-dev environments; console
+    # output for local readability.
+    configure_logging(json_format=(settings.environment != "dev"))
+
     app = FastAPI(
         title="lore-eligibility",
         version=__version__,
