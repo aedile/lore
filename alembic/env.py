@@ -45,9 +45,7 @@ _database_url = os.environ.get("DATABASE_URL", "")
 if _database_url:
     # Translate asyncpg DSN to psycopg2 for Alembic if needed.
     if _database_url.startswith("postgresql+asyncpg://"):
-        _database_url = _database_url.replace(
-            "postgresql+asyncpg://", "postgresql+psycopg2://", 1
-        )
+        _database_url = _database_url.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
     config.set_main_option("DATABASE_URL", _database_url)
 
 # ---------------------------------------------------------------------------

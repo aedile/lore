@@ -60,15 +60,13 @@ def validate_settings(settings: Settings) -> None:
     errors: list[str] = []
 
     if not settings.database_url:
-        errors.append(
-            "DATABASE_URL is required in non-dev environments."
-        )
+        errors.append("DATABASE_URL is required in non-dev environments.")
 
     if len(settings.secret_key) < SECRET_KEY_MIN_LENGTH:
         errors.append(
             f"SECRET_KEY must be at least {SECRET_KEY_MIN_LENGTH} characters "
             f"(got {len(settings.secret_key)}). "
-            "Generate via: python -c \"import secrets; print(secrets.token_hex(32))\""
+            'Generate via: python -c "import secrets; print(secrets.token_hex(32))"'
         )
 
     if settings.auth_mode == "none":
@@ -88,14 +86,14 @@ def validate_settings(settings: Settings) -> None:
         errors.append(
             f"AUDIT_KEY must be a {AUDIT_KEY_EXPECTED_LENGTH}-character "
             "lowercase hex string (32 raw bytes). "
-            "Generate via: python -c \"import secrets; print(secrets.token_hex(32))\""
+            'Generate via: python -c "import secrets; print(secrets.token_hex(32))"'
         )
 
     if not settings.pii_encryption_key:
         errors.append(
             "PII_ENCRYPTION_KEY is required in non-dev environments. "
-            "Generate via: python -c \"from cryptography.fernet import Fernet; "
-            "print(Fernet.generate_key().decode())\""
+            'Generate via: python -c "from cryptography.fernet import Fernet; '
+            'print(Fernet.generate_key().decode())"'
         )
 
     if not settings.artifact_signing_key:
@@ -104,15 +102,12 @@ def validate_settings(settings: Settings) -> None:
             "must be distinct from SECRET_KEY."
         )
     elif settings.artifact_signing_key == settings.secret_key:
-        errors.append(
-            "ARTIFACT_SIGNING_KEY must be distinct from SECRET_KEY."
-        )
+        errors.append("ARTIFACT_SIGNING_KEY must be distinct from SECRET_KEY.")
 
     if errors:
         raise ConfigurationError(
             "Configuration validation failed for "
-            f"ENVIRONMENT={settings.environment!r}:\n  - "
-            + "\n  - ".join(errors)
+            f"ENVIRONMENT={settings.environment!r}:\n  - " + "\n  - ".join(errors)
         )
 
 

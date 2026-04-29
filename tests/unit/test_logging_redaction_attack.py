@@ -20,7 +20,6 @@ from lore_eligibility.bootstrapper.logging_config import (
     redact_pii_patterns,
 )
 
-
 # ---------------------------------------------------------------------------
 # Key-based redaction — attack tests
 # ---------------------------------------------------------------------------
@@ -152,14 +151,12 @@ def test_redact_pii_patterns_masks_iso_dob() -> None:
 @pytest.mark.attack
 def test_redact_pii_patterns_handles_multiple_in_one_string() -> None:
     """Multiple PII tokens in the same string are all redacted."""
-    event = {
-        "event": "user user@example.com (SSN 123-45-6789) called 555-123-4567"
-    }
+    event = {"event": "user user@example.com (SSN 123-45-6789) called 555-123-4567"}
     out = redact_pii_patterns(None, "info", event)
     assert "user@example.com" not in out["event"]
     assert "123-45-6789" not in out["event"]
     assert "555-123-4567" not in out["event"]
-    assert out["event"].count("***") >= 6  # 3 redactions × 2 markers each
+    assert out["event"].count("***") >= 6  # 3 redactions x 2 markers each
 
 
 @pytest.mark.unit

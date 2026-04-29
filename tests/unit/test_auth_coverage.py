@@ -31,9 +31,7 @@ from lore_eligibility.shared.constants import AUTH_EXEMPT_ROUTES
 #: Names of dependency callables that satisfy the auth requirement.
 #: Add new names here when a new auth wrapper is introduced (e.g. a
 #: stricter ``get_current_admin`` for admin-only endpoints).
-EXPECTED_AUTH_DEP_NAMES: frozenset[str] = frozenset(
-    {"get_current_operator", "get_current_user"}
-)
+EXPECTED_AUTH_DEP_NAMES: frozenset[str] = frozenset({"get_current_operator", "get_current_user"})
 
 
 def _walk_dependency_names(dependant: object) -> set[str]:
@@ -78,8 +76,7 @@ def test_every_non_exempt_route_has_auth_dependency() -> None:
         "The following routes have no authentication dependency and are "
         "not declared in AUTH_EXEMPT_ROUTES. Either add an auth dependency "
         "(e.g. Depends(get_current_operator)) or add the path to "
-        "AUTH_EXEMPT_ROUTES with a documented justification:\n  "
-        + "\n  ".join(violations)
+        "AUTH_EXEMPT_ROUTES with a documented justification:\n  " + "\n  ".join(violations)
     )
 
 

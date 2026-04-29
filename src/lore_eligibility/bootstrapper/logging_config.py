@@ -111,16 +111,12 @@ PII_PATTERNS: tuple[tuple[Pattern[str], str], ...] = (
     # Phone (US-shaped): 10 digits with optional country code, parens,
     # spaces, dots, hyphens.
     (
-        re.compile(
-            r"\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b"
-        ),
+        re.compile(r"\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b"),
         "***PHONE***",
     ),
     # Email
     (
-        re.compile(
-            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+\b"
-        ),
+        re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+\b"),
         "***EMAIL***",
     ),
     # Date of birth (YYYY-MM-DD or MM/DD/YYYY) — defensive only; structured
@@ -165,11 +161,7 @@ def redact_pii_keys(
         value = event_dict[key]
         if isinstance(value, Mapping):
             event_dict[key] = {
-                inner_key: (
-                    REDACTED_VALUE
-                    if inner_key.lower() in PII_KEYS
-                    else inner_value
-                )
+                inner_key: (REDACTED_VALUE if inner_key.lower() in PII_KEYS else inner_value)
                 for inner_key, inner_value in value.items()
             }
     return event_dict
