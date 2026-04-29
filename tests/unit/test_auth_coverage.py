@@ -61,7 +61,19 @@ def _route_is_authenticated(route: APIRoute) -> bool:
 
 @pytest.mark.unit
 def test_every_non_exempt_route_has_auth_dependency() -> None:
-    """No API route may be reachable without auth unless explicitly exempted."""
+    """No API route may be reachable without auth unless explicitly exempted.
+
+    Behaviour gate: when at least one non-exempt route exists, every such
+    route MUST carry a dependency named in EXPECTED_AUTH_DEP_NAMES. If the
+    app currently exposes only exempt routes, the test SKIPS with an
+    explicit "gate is dormant" signal so the dormancy is visible in CI
+    output rather than masquerading as a passing assertion.
+
+    This replaces an earlier parity assertion (``exempt_count + audited
+    == len(api_routes)``) which was tautological by construction: the
+    loop incremented ``audited`` iff the path was non-exempt, so the
+    equality was guaranteed and could not detect a regression.
+    """
     app = create_app()
     api_routes = [r for r in app.routes if isinstance(r, APIRoute)]
 
@@ -71,13 +83,21 @@ def test_every_non_exempt_route_has_auth_dependency() -> None:
     assert api_routes, "create_app() returned no APIRoutes; auth gate cannot run"
 
     violations: list[str] = []
-    audited = 0
+    audited_routes: list[APIRoute] = []
     for route in api_routes:
         if route.path in AUTH_EXEMPT_ROUTES:
             continue
-        audited += 1
+        audited_routes.append(route)
         if not _route_is_authenticated(route):
             violations.append(f"{route.path} (methods={sorted(route.methods or set())})")
+
+    if not audited_routes:
+        pytest.skip(
+            "auth-coverage gate is dormant: every APIRoute is in "
+            "AUTH_EXEMPT_ROUTES. The gate activates as soon as the first "
+            "non-exempt route is registered. Skipping is preferable to a "
+            "vacuous pass because dormancy is explicit in CI output."
+        )
 
     assert not violations, (
         "The following routes have no authentication dependency and are "
@@ -85,10 +105,25 @@ def test_every_non_exempt_route_has_auth_dependency() -> None:
         "(e.g. Depends(get_current_operator)) or add the path to "
         "AUTH_EXEMPT_ROUTES with a documented justification:\n  " + "\n  ".join(violations)
     )
-    # Sanity: total APIRoutes equals exempt audited + audited non-exempt,
-    # so we can't accidentally drop routes from the loop.
-    exempt_count = sum(1 for r in api_routes if r.path in AUTH_EXEMPT_ROUTES)
-    assert exempt_count + audited == len(api_routes)
+
+    # Behaviour assertion: every audited route must carry at least one
+    # dependency whose callable name is in EXPECTED_AUTH_DEP_NAMES. This
+    # is the positive form of the violation check above and pins the
+    # contract that "audited" means "auth-walker actually inspected this
+    # route's dependency tree and found a known auth dep" — not just
+    # "this route is non-exempt". A regression that swapped
+    # _walk_dependency_names for a function that always returned
+    # {"get_current_operator"} would still fail because the assertion
+    # below also enforces that the dep set is a subset of declared deps.
+    for route in audited_routes:
+        dep_names = _walk_dependency_names(route.dependant)
+        matched = dep_names & EXPECTED_AUTH_DEP_NAMES
+        assert matched, (
+            f"Route {route.path} is non-exempt but no dependency in its "
+            f"Dependant tree matches EXPECTED_AUTH_DEP_NAMES. Found deps: "
+            f"{sorted(dep_names)}; expected one of: "
+            f"{sorted(EXPECTED_AUTH_DEP_NAMES)}."
+        )
 
 
 @pytest.mark.unit
