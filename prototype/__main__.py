@@ -16,8 +16,14 @@ from pathlib import Path
 
 import psycopg
 
+from prototype.canonical_lookup import PostgresCanonicalLookup
+from prototype.csv_adapter import read_csv
 from prototype.demo import run_full_demo
 from prototype.identity import TIER_1, TIER_2, TIER_3, TIER_4, TierThresholds
+from prototype.verification import (
+    VerificationSettings,
+    create_app,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_FIXTURES = REPO_ROOT / "prototype" / "fixtures"
@@ -163,6 +169,9 @@ def _cli() -> int:
         print(f"  broken at line = {v.broken_at_line}")
         print(f"  error         = {v.error}")
 
+    _print_section("PRD #4 — Verification API live calls")
+    _run_verification_demo(conn, args.fixtures)
+
     _print_section("PRD #6 — Redaction scanner")
     if not result.redaction_matches:
         print("  PASS — zero PII pattern matches across the audit chain.")
@@ -188,6 +197,85 @@ def _cli() -> int:
     print()
 
     return 0 if (v.valid and not result.redaction_matches) else 1
+
+
+def _run_verification_demo(conn: object, fixtures_dir: Path) -> None:
+    """Hit /v1/verify against PostgresCanonicalLookup with sample claims
+    drawn from the day-1 fixture data and the deleted member, showing the
+    XR-003 collapse to {VERIFIED, NOT_VERIFIED} across internal states."""
+    from fastapi.testclient import TestClient
+
+    lookup = PostgresCanonicalLookup(conn)
+    client = TestClient(
+        create_app(
+            lookup=lookup,
+            settings=VerificationSettings(response_floor_ms=10.0),
+        )
+    )
+
+    # Pick three plaintext claims from the day-1 fixture CSV: a clean
+    # PARTNER_A record (expect VERIFIED), the deletion-fixture record
+    # (expect NOT_VERIFIED — DELETED state), and a not-found claim.
+    rows = list(read_csv(fixtures_dir / "partner_a_day1.csv"))
+
+    # Convert MM/DD/YYYY -> ISO YYYY-MM-DD for the API.
+    def _iso(us_date: str) -> str:
+        m, d, y = us_date.split("/")
+        return f"{int(y):04d}-{int(m):02d}-{int(d):02d}"
+
+    # Find the deletion-fixture row from the inventory.
+    import json as _json
+
+    inventory = _json.loads((fixtures_dir / "scenario_inventory.json").read_text())
+    deletion_pmid = next(
+        e["partner_member_id"]
+        for e in inventory["records"]
+        if e["scenario"] == "deletion_fixture" and "partner_a_day1" in e["feed"]
+    )
+    deletion_row = next(r for r in rows if r["member_id"] == deletion_pmid)
+    # Pick a clean record that won't be in any other scenario.
+    clean_pmids = {
+        e["partner_member_id"]
+        for e in inventory["records"]
+        if e["scenario"] == "clean" and "partner_a_day1" in e["feed"]
+    }
+    clean_row = next(r for r in rows if r["member_id"] in clean_pmids)
+
+    cases = [
+        (
+            "Eligible member (active in canonical store)",
+            clean_row["FirstName"],
+            clean_row["LastName"],
+            _iso(clean_row["DOB"]),
+        ),
+        (
+            "Deleted member (DELETED state — internal collapse)",
+            deletion_row["FirstName"],
+            deletion_row["LastName"],
+            _iso(deletion_row["DOB"]),
+        ),
+        ("Not found (no canonical member)", "Phantom", "Person", "1900-01-01"),
+        (
+            "Not found (different last name)",
+            clean_row["FirstName"],
+            "Different",
+            _iso(clean_row["DOB"]),
+        ),
+    ]
+
+    print(
+        "  Hitting POST /v1/verify against PostgresCanonicalLookup. The\n"
+        "  external response set is exactly {VERIFIED, NOT_VERIFIED} — same\n"
+        "  shape across all internal states (BR-401 / XR-003 collapse).\n"
+    )
+    for label, first, last, dob in cases:
+        body = {
+            "claim": {"first_name": first, "last_name": last, "date_of_birth": dob},
+            "context": {"client_id": "panel-demo", "request_id": "live"},
+        }
+        response = client.post("/v1/verify", json=body)
+        status = response.json().get("status", "?")
+        print(f"  {label:55s} -> {status}")
 
 
 if __name__ == "__main__":
