@@ -1,0 +1,178 @@
+repos:
+  # ---------------------------------------------------------------------------
+  # Poetry lock file consistency — catch pyproject.toml/poetry.lock drift
+  # before it reaches CI. Uses the locally installed Poetry binary so the
+  # check version always matches the project's pinned Poetry version.
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/python-poetry/poetry
+    rev: 2.2.1
+    hooks:
+      - id: poetry-check
+        args: ["--lock"]
+
+  # ---------------------------------------------------------------------------
+  # Security — gitleaks: detect secrets and credentials in commits
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.3
+    hooks:
+      - id: gitleaks
+
+  # ---------------------------------------------------------------------------
+  # Security — detect-secrets: baseline-aware secret scanning
+  #
+  # docs/ci-audit.jsonl is excluded because it contains SHA-256 integrity
+  # hashes produced by ci-local.sh by design.
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: '^docs/ci-audit\.jsonl$'
+
+  # ---------------------------------------------------------------------------
+  # Linting and formatting — ruff (replaces flake8, isort, pyupgrade)
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.13
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  # ---------------------------------------------------------------------------
+  # Type checking — mypy strict mode on src/ only
+  #
+  # additional_dependencies must list every package imported at module scope in
+  # src/lore_eligibility/ so that the mirrors-mypy isolated environment can
+  # resolve types. Pin versions to match pyproject.toml production deps.
+  # Update this list whenever a new production dependency is added.
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.19.1
+    hooks:
+      - id: mypy
+        args: [--strict]
+        additional_dependencies:
+          - mypy==1.19.1
+          - pydantic>=2.0.0
+          - pydantic-settings>=2.0.0
+          - fastapi>=0.115.0
+          - starlette>=0.40.0
+          - cryptography>=46.0.5
+          - sqlalchemy[asyncio]>=2.0.0
+          - greenlet>=3.0.0
+          - pyjwt>=2.12.1
+          - bcrypt>=5.0.0
+          - httpx>=0.27.0
+          - structlog>=24.0.0
+        files: ^src/
+
+  # ---------------------------------------------------------------------------
+  # Security scanning — bandit on src/ and scripts/
+  # tests/ is excluded: test-only credentials trigger false positives.
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.9.4
+    hooks:
+      - id: bandit
+        args: [-c, pyproject.toml, -r, src/, scripts/]
+        files: ^(src|scripts)/
+
+  # ---------------------------------------------------------------------------
+  # Notebook output stripping — nbstripout
+  #
+  # Strips Jupyter notebook cell outputs before commit to prevent accidental
+  # PII leakage via notebook outputs and keep diffs readable.
+  # ---------------------------------------------------------------------------
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.9.1
+    hooks:
+      - id: nbstripout
+
+  # ---------------------------------------------------------------------------
+  # Module boundary enforcement — import-linter
+  #
+  # Enforces the import contracts defined in [tool.importlinter] in
+  # pyproject.toml. Local hook so it runs in the project's Poetry environment.
+  # ---------------------------------------------------------------------------
+  - repo: local
+    hooks:
+      - id: import-linter
+        name: import-linter
+        entry: poetry run lint-imports
+        language: system
+        types: [python]
+        pass_filenames: false
+
+  # ---------------------------------------------------------------------------
+  # Docstring validation — pydoclint
+  #
+  # Validates Google-style docstring parameter names, return types, and raises
+  # sections against actual function signatures.
+  # Configuration is in [tool.pydoclint] in pyproject.toml.
+  # ---------------------------------------------------------------------------
+      - id: pydoclint
+        name: pydoclint
+        entry: poetry run pydoclint
+        language: system
+        types: [python]
+        files: ^src/lore_eligibility/
+        pass_filenames: true
+
+  # ---------------------------------------------------------------------------
+  # Assertion density check
+  #
+  # Parses test_*.py files and counts assert statements per test function.
+  # Functions with < 2 assertions are violations (unless grandfathered in
+  # scripts/assert_density_baseline.txt).
+  # ---------------------------------------------------------------------------
+      - id: assert-density
+        name: assert-density
+        entry: python3 scripts/assert_density_check.py --baseline scripts/assert_density_baseline.txt --json --per-file-threshold 2.0
+        language: system
+        files: ^tests/.*test_.*\.py$
+        pass_filenames: true
+
+  # ---------------------------------------------------------------------------
+  # Mock-free integration test enforcement (ADR-0001 — to be authored)
+  #
+  # Scans tests/integration/test_*.py files for unapproved unittest.mock usage.
+  # Usage without a per-line "# integration-mock-allowed: <reason>" comment
+  # causes a non-zero exit.
+  # ---------------------------------------------------------------------------
+      - id: integration-mock
+        name: integration-mock
+        entry: python3 scripts/check_integration_mocks.py tests/integration/
+        language: system
+        files: ^tests/integration/test_.*\.py$
+        pass_filenames: false
+
+  # ---------------------------------------------------------------------------
+  # Documentation accuracy audit
+  #
+  # Reads README.md and verifies: no stale phrases, all referenced docs/*.md
+  # files exist, all backtick-wrapped src/ paths exist on disk.
+  # ---------------------------------------------------------------------------
+      - id: doc-audit
+        name: doc-audit
+        entry: poetry run python scripts/doc_audit.py
+        language: system
+        files: \.md$
+        pass_filenames: false
+
+  # ---------------------------------------------------------------------------
+  # PII-in-test-fixtures detection (CONSTITUTION Priority 0)
+  #
+  # Scans tests/fixtures/, tests/integration/, sample_data/ for SSN-shaped,
+  # phone-shaped, DOB-shaped, and real-domain-email-shaped substrings.
+  # Per-line opt-out via `# pii-allowed: <reason>` comment for legitimately
+  # fictional / Faker-generated data.
+  # ---------------------------------------------------------------------------
+      - id: check-pii-in-fixtures
+        name: check-pii-in-fixtures
+        entry: python3 scripts/check_pii_in_fixtures.py
+        language: system
+        files: ^(tests/(fixtures|integration)|sample_data)/.*\.(py|json|jsonl|csv|tsv|txt|yaml|yml|sql)$
+        pass_filenames: false

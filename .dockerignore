@@ -1,0 +1,49 @@
+# =============================================================================
+# .dockerignore — lore-eligibility
+#
+# Excludes files and directories from the Docker build context.
+# Security: prevents secrets, credentials, and PII from entering image layers.
+# Size: excludes development artifacts, caches, and test infrastructure.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Python artifacts
+# ---------------------------------------------------------------------------
+.venv/
+__pycache__/
+*.pyc
+*.egg-info
+dist/
+build/
+
+# ---------------------------------------------------------------------------
+# Version control
+# ---------------------------------------------------------------------------
+.git/
+
+# ---------------------------------------------------------------------------
+# Runtime data — PII protection (CONSTITUTION.md §PII Protection)
+# NEVER include these in the Docker build context. They may contain secrets,
+# user data, or environment-specific credentials.
+# ---------------------------------------------------------------------------
+data/
+output/
+logs/
+.env
+config.local.json
+
+# ---------------------------------------------------------------------------
+# Tests — not needed in production image
+# ---------------------------------------------------------------------------
+tests/
+
+# ---------------------------------------------------------------------------
+# Development tooling and caches
+# ---------------------------------------------------------------------------
+.claude/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Case-study scratch
+IGNORE/

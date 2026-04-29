@@ -1,1 +1,61 @@
-IGNORE/*
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+*.egg
+
+# Environment & secrets
+.env
+.env.local
+config.local.json
+secrets/
+
+# Data & output (may contain PII)
+data/
+output/
+logs/
+
+# Source-bundled data files (not PII — committed word lists, fixtures, etc.)
+# These live under src/ and are part of the Python package, not user data.
+!src/lore_eligibility/shared/data/
+!src/lore_eligibility/shared/data/**
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Vulture generated whitelist (always regenerated from AST, never committed stale)
+.vulture_generated.py
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Mutation testing (mutmut 3.x cache directory)
+mutants/
+.mutmut_cache/
+
+# Hypothesis database (reproducibility examples; not committed per project convention)
+.hypothesis/
+
+# Claude harness
+.claude/worktrees/
+.claude/scheduled_tasks.lock
+
+# Postgres connection pooler — auth file generated at runtime
+pgbouncer/userlist.txt
+
+# Case-study scratch directory (problem brief, careers research, etc.)
+IGNORE/
