@@ -6,6 +6,8 @@
 | **Goal** | SOC 2 Type II or HITRUST CSF readiness, depending on the attestation choice (RR-004). |
 | **Status** | LIVE BACKLOG |
 
+> **Scope note.** This phase is currently scoped to the work that holds across either attestation track (HITRUST CSF or SOC 2 Type II). The track decision is RR-004 in the risk register and remains open as of backlog creation. Once the track is decided, the story count is expected to grow approximately 3x with track-specific evidence collection, control mapping, vendor engagement, and audit cycles. Reviewers and capacity planners should treat the current count as a floor, not a complete picture. The Phase 4 backlog will be re-synthesized after the RR-004 decision lands.
+
 ---
 
 ## Phase 4 Goal
