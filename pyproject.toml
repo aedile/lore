@@ -1,0 +1,352 @@
+[tool.poetry]
+name = "lore-eligibility"
+version = "0.1.0"
+description = "Strategic data system for trusted partner eligibility and identity verification (Lore Health case study)"
+authors = []
+license = "Proprietary"
+readme = "README.md"
+packages = [{ include = "lore_eligibility", from = "src" }]
+
+[tool.poetry.scripts]
+lore-eligibility = "lore_eligibility.cli:cli"
+
+# ---------------------------------------------------------------------------
+# Core runtime dependencies
+# ---------------------------------------------------------------------------
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = ">=0.115.0,<0.136.0"
+uvicorn = {version = ">=0.32.0,<0.42.0", extras = ["standard"]}
+pydantic = ">=2.0.0,<2.13.0"
+pydantic-settings = ">=2.0.0,<3.0.0"
+sqlmodel = ">=0.0.21,<0.1.0"
+alembic = ">=1.14.0,<1.19.0"
+psycopg2-binary = ">=2.9.0,<3.0.0"
+# asyncpg: async PostgreSQL driver for SQLAlchemy asyncio extension.
+# Used as the DSN scheme ``postgresql+asyncpg://`` in production DATABASE_URL.
+asyncpg = ">=0.29.0,<0.32.0"
+# greenlet: required by SQLAlchemy async extension. Pinned explicitly for
+# cross-platform reliability (the SQLAlchemy platform marker is unreliable
+# on ARM64).
+greenlet = ">=3.0.0,<4.0.0"
+cryptography = ">=46.0.6,<47.0.0"
+PyJWT = {version = ">=2.10.0,<3.0.0", extras = ["cryptography"]}
+passlib = {version = ">=1.7.4,<2.0.0", extras = ["bcrypt"]}
+prometheus-client = ">=0.21.0,<1.0.0"
+opentelemetry-sdk = ">=1.28.0,<2.0.0"
+opentelemetry-instrumentation-fastapi = ">=0.49b0,<1.0.0"
+httpx = ">=0.27.0,<1.0.0"
+click = ">=8.0.0,<9.0.0"
+faker = ">=30.0.0,<41.0.0"
+pandas = ">=2.2.0,<3.0.0"
+numpy = ">=1.26.0,<3.0.0"
+psutil = ">=5.9.0,<8.0.0"
+# limits: in-memory fixed-window rate limiting for middleware.
+limits = ">=3.14.0,<6.0.0"
+# structlog: structured JSON logging with context propagation.
+structlog = ">=24.0.0,<26.0.0"
+# requests: pinned to fix CVE-2026-25645 (transitive via httpx/other deps).
+requests = "^2.33.0"
+
+# ---------------------------------------------------------------------------
+# Dev group — testing, linting, type-checking, security tooling
+# ---------------------------------------------------------------------------
+[tool.poetry.group.dev.dependencies]
+pytest = "^9.0"
+pytest-cov = "^6.1"
+pytest-asyncio = ">=1.3.0,<2.0.0"
+pytest-postgresql = "^7.0"
+ruff = "^0.11"
+mypy = "^1.15"
+bandit = {version = "^1.8", extras = ["toml"]}
+pip-audit = "^2.9"
+vulture = "^2.14"
+import-linter = "^2.3"
+pre-commit = "^4.2"
+pydoclint = "^0.8.3"
+hypothesis = "^6.151.9"
+mutmut = "^3.5.0"
+aiosqlite = ">=0.19.0,<1.0.0"
+pandas-stubs = ">=2.2.0,<4.0.0"
+types-psutil = ">=5.9.0,<8.0.0"
+types-pyyaml = "^6.0.12.20250915"
+detect-secrets = "^1.5"
+pygments = ">=2.20.0"
+
+# ---------------------------------------------------------------------------
+# Build system
+# ---------------------------------------------------------------------------
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# ---------------------------------------------------------------------------
+# Ruff — Linting and Formatting
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src"]
+exclude = [
+    "docs/",
+    ".venv",
+    ".git",
+    "__pycache__",
+    "*.egg-info",
+]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "N", "UP", "S", "B", "A", "C4", "PT", "RUF"]
+ignore = ["S101"]
+external = ["DOC", "BLE001"]
+
+[tool.ruff.lint.per-file-ignores]
+# S101: assert — allowed in tests and scripts.
+# S105/S106: hardcoded test-only credentials, not real secrets.
+# S108: insecure /tmp usage — mocked paths in unit tests are not real fs calls.
+# RUF002: ambiguous unicode in docstrings (en-dash notation).
+# S603/S607: subprocess invocations in validation tests (trusted static lists).
+# RUF012: ClassVar annotation on test class-level constants.
+"tests/**" = ["S101", "S105", "S106", "S108", "RUF002", "S603", "S607", "RUF012"]
+# S603/S607: subprocess without shell=True / partial path — scripts.
+# UP006/UP035: typing.List etc. — modernise in later tasks.
+"scripts/**" = ["S603", "S607", "UP006", "UP035"]
+# Vulture whitelist files use bare identifiers intentionally.
+".vulture_whitelist.py" = ["F821", "B018", "E501"]
+".vulture_generated.py" = ["F821", "B018", "E501"]
+# B008: FastAPI Depends() in argument defaults is the canonical FastAPI DI pattern.
+"src/lore_eligibility/bootstrapper/dependencies/*.py" = ["B008"]
+"src/lore_eligibility/bootstrapper/main.py" = ["B008"]
+"src/lore_eligibility/bootstrapper/routers/*.py" = ["B008"]
+
+# ---------------------------------------------------------------------------
+# Mypy — Strict Type Checking
+# ---------------------------------------------------------------------------
+[tool.mypy]
+strict = true
+python_version = "3.12"
+mypy_path = "src"
+packages = ["lore_eligibility"]
+
+# ---------------------------------------------------------------------------
+# Per-module overrides for packages that don't ship py.typed or that the
+# pre-commit isolated mypy environment cannot resolve.
+# ---------------------------------------------------------------------------
+
+[[tool.mypy.overrides]]
+module = ["pydantic_settings"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["limits", "limits.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["prometheus_client", "prometheus_client.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["opentelemetry.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["asyncpg", "asyncpg.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["sqlmodel", "sqlmodel.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["numpy", "numpy.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["click", "click.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["lore_eligibility.cli"]
+disable_error_code = ["untyped-decorator"]
+
+[[tool.mypy.overrides]]
+module = ["yaml"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["psutil", "psutil.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["structlog", "structlog.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["faker", "faker.*"]
+ignore_missing_imports = true
+
+# ---------------------------------------------------------------------------
+# Bandit — Security Scanner
+# ---------------------------------------------------------------------------
+[tool.bandit]
+targets = ["src"]
+skips = ["B101"]
+
+# ---------------------------------------------------------------------------
+# Pytest — Test Runner and Coverage
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = [
+    "--cov=src/lore_eligibility",
+    "--cov-report=term-missing",
+    "--cov-fail-under=95",
+    "--tb=short",
+]
+markers = [
+    "unit: Fast, isolated unit tests with no external dependencies",
+    "integration: Tests requiring live databases or external services",
+    "attack: Negative/security tests verifying rejection of invalid/malicious inputs (Rule 22)",
+    "slow: marks tests as slow-running",
+    "e2e: Full end-to-end system tests requiring all infrastructure components",
+    "synthesizer: Tests requiring synthetic-data generation dependencies",
+]
+filterwarnings = [
+    # Baseline: all warnings are errors — future regressions fail the build.
+    # NOTE: Do NOT pass -W error on the command line. That would override these
+    # config-file ignore filters (which have lower priority than cmdline flags).
+    "error",
+    # SQLite in-memory databases used in unit test helpers emit ResourceWarning
+    # when the GC collects the engine without explicit dispose().
+    "ignore::ResourceWarning",
+    # Python 3.14 tightened coroutine lifecycle tracking. unittest.mock.AsyncMock
+    # creates internal _execute_mock_call coroutines as an implementation detail.
+    "ignore:coroutine.*AsyncMockMixin._execute_mock_call.*was never awaited:RuntimeWarning",
+    "ignore:Exception ignored while finalizing coroutine.*AsyncMockMixin._execute_mock_call.*:pytest.PytestUnraisableExceptionWarning",
+]
+
+# ---------------------------------------------------------------------------
+# Coverage — Source Mapping and Branch Coverage
+# ---------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["lore_eligibility"]
+branch = true
+
+[tool.coverage.paths]
+source = ["src/lore_eligibility", "*/lore_eligibility"]
+
+# ---------------------------------------------------------------------------
+# Import-Linter — Module Boundary Enforcement
+#
+# Module independence contract is intentionally absent here: the domain
+# decomposition (modules under src/lore_eligibility/modules/) is decided
+# in the ARD. Once modules exist, add an `independence` contract listing
+# them. Until then, the bootstrapper-isolation and shared-constraints
+# contracts below are the active boundary enforcement.
+# ---------------------------------------------------------------------------
+[tool.importlinter]
+root_packages = ["lore_eligibility"]
+
+[[tool.importlinter.contracts]]
+name = "Bootstrapper isolation"
+type = "forbidden"
+source_modules = [
+    "lore_eligibility.modules",
+    "lore_eligibility.shared",
+]
+forbidden_modules = ["lore_eligibility.bootstrapper"]
+
+[[tool.importlinter.contracts]]
+name = "Shared constraints"
+type = "forbidden"
+source_modules = ["lore_eligibility.shared"]
+forbidden_modules = [
+    "lore_eligibility.modules",
+    "lore_eligibility.bootstrapper",
+]
+
+# ---------------------------------------------------------------------------
+# Vulture — Dead Code Detection
+# ---------------------------------------------------------------------------
+[tool.vulture]
+min_confidence = 80
+paths = ["src", ".vulture_whitelist.py", ".vulture_generated.py"]
+ignore_names = []
+
+# ---------------------------------------------------------------------------
+# Pydoclint — Docstring parameter/return/yield validation
+# ---------------------------------------------------------------------------
+[tool.pydoclint]
+style = "google"
+arg-type-hints-in-signature = true
+arg-type-hints-in-docstring = false
+check-return-types = false
+check-class-attributes = false
+require-return-section-when-returning-nothing = false
+require-yield-section-when-yielding-nothing = false
+native-mode-noqa-location = "definition"
+
+# ---------------------------------------------------------------------------
+# Mutmut — Mutation Testing
+#
+# Scope: security-critical modules (shared/security/) and auth modules.
+# Mutation score thresholds (read by scripts/mutmut_gate.py):
+#   threshold_security = 60   -> shared/security/ modules
+#   threshold_auth = 50       -> bootstrapper/auth.py + token_blocklist.py
+#
+# Cache directory: mutants/ (mutmut 3.x naming).
+# CI gate clears mutants/ before every run to prevent cache poisoning.
+# ---------------------------------------------------------------------------
+[tool.mutmut]
+paths_to_mutate = ["src/lore_eligibility/"]
+do_not_mutate = [
+    # Bootstrapper non-security files — thin wiring, not security-critical.
+    # bootstrapper/auth.py is INTENTIONALLY absent from this list once it
+    # exists: it is security-critical and must be mutation-tested.
+    "src/lore_eligibility/__init__.py",
+    "src/lore_eligibility/cli.py",
+    "src/lore_eligibility/bootstrapper/__init__.py",
+    "src/lore_eligibility/bootstrapper/main.py",
+    "src/lore_eligibility/bootstrapper/settings.py",
+    "src/lore_eligibility/bootstrapper/database.py",
+    "src/lore_eligibility/bootstrapper/logging_config.py",
+    "src/lore_eligibility/bootstrapper/metrics.py",
+    "src/lore_eligibility/bootstrapper/middleware/*",
+    "src/lore_eligibility/bootstrapper/routers/*",
+    "src/lore_eligibility/bootstrapper/dependencies/*",
+    "src/lore_eligibility/bootstrapper/services/*",
+    # Domain modules excluded — only shared/security/ + auth are mutation-tested.
+    "src/lore_eligibility/modules/*",
+    "src/lore_eligibility/modules/**/*",
+    # shared/ non-security files — excluded from mutation scope.
+    "src/lore_eligibility/shared/__init__.py",
+    "src/lore_eligibility/shared/constants.py",
+    "src/lore_eligibility/shared/enums.py",
+    "src/lore_eligibility/shared/errors.py",
+    "src/lore_eligibility/shared/exceptions.py",
+    "src/lore_eligibility/shared/telemetry.py",
+    "src/lore_eligibility/shared/security/__init__.py",
+]
+threshold_security = 60
+threshold_auth = 50
+tests_dir = ["tests/unit/"]
+pytest_add_cli_args = [
+    "-x",
+    "-q",
+    "--tb=no",
+    "--no-header",
+    "--no-cov",
+    "--override-ini=addopts=",
+]
+also_copy = [
+    "scripts/",
+    ".vulture_whitelist.py",
+    ".env",
+    "docs/",
+    "alembic/",
+    "alembic.ini",
+    "Makefile",
+]
