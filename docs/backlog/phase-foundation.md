@@ -688,16 +688,31 @@ Land the empty production substrate that everything else builds on; establish go
 - **Depends on** P0-CFG-001
 - **Tier** IMPORTANT · **Size** S · **Owner** Architecture
 
-#### P0-CFG-004 — Decision-authority + approver attribution gate (XR-011)
+#### P0-CFG-004 — Parameter-ledger schema remediation for XR-011
 - **As** the Architecture team
-  **I want** a CI gate that verifies: every ADR carries an `Approver` field at the appropriate authority tier; every BRD amendment PR carries the corresponding approver in CODEOWNERS sign-off; every parameter ledger row classified as **Strategic** has a named approver
+  **I want** the BRD parameter ledger schema and contents brought into XR-011 conformance: an explicit `Approver` column added; the strategic-tier vocabulary reconciled with XR-011's tiers (Operational / Strategic differentiator / Existential); every Strategic-or-higher row populated with an approver matching XR-011's required tier
+  **So that** P0-CFG-005 (the gate) can ship in blocking mode without immediately failing on the BRD as-merged.
+- **AC**
+  - Given the BRD ledger post-remediation, when reviewed, then schema is `parameter | default | type | range | scope | owner role | strategic tier | approver | referenced by` (approver added).
+  - Given the strategic-tier vocabulary, when remediated, then it uses XR-011's three tiers (Operational / Strategic differentiator / Existential) consistently; the existing labels (`Compliance baseline`, `Operational excellence`, `Differentiator`) are mapped per a documented translation table in the BRD or retired.
+  - Given Differentiator (Strategic) rows, when reviewed, then each carries `approver = CTO` (XR-011 mapping); known mismatch `VERIFICATION_RESPONSE_BODY_BYTES` (currently owner=Security Officer) is reconciled — either approver moves to CTO with Security Officer retained as owner, or the strategic tier is corrected to match the actual approval authority.
+  - Given any Existential-tier row (none currently exist), when present, then `approver = CEO`.
+  - Given the remediation, when shipped, then it is a BRD amendment PR following XR-011's own change-request process (which means CODEOWNERS-on-BRD must sign off — at minimum CTO + Privacy Officer for amendment legitimacy).
+- **Originating** XR-011, BRD §"Configuration Parameters"
+- **Depends on** P0-CFG-001
+- **Tier** CRITICAL · **Size** M · **Owner** Architecture
+
+#### P0-CFG-005 — Decision-authority + approver attribution gate (XR-011 enforcement)
+- **As** the Architecture team
+  **I want** a CI gate that verifies: every ADR carries an `Approver` field at the appropriate authority tier; every BRD amendment PR carries the corresponding approver in CODEOWNERS sign-off; every parameter ledger row classified as Strategic-or-Existential has an approver matching XR-011's tier mapping
   **So that** XR-011 holds: decision authority is mechanically auditable, not a convention.
 - **AC**
-  - Given an ADR PR missing an approver field at the required tier (engineering lead / CTO / CEO per the parameter or decision class), when CI runs, then the gate fails the PR.
+  - Given an ADR PR missing an approver field at the required tier (engineering lead / CTO / CEO per the decision class), when CI runs, then the gate fails the PR.
   - Given a BRD/ARD amendment PR, when CI runs, then required-approver CODEOWNERS sign-off is verified by the gate (the PR is blocked otherwise).
-  - Given the parameter ledger, when scanned, then every Strategic-tier row has a named approver; missing entries trip the gate.
+  - Given the parameter ledger, when scanned, then every Strategic-or-Existential row has a named approver matching the XR-011 tier mapping; missing or mismatched entries trip the gate.
+  - Given the gate, when first enabled (post P0-CFG-004 remediation merge), then it ships in **warn-only mode** for one full review cycle to surface any leftover mismatches; only after a clean cycle is it flipped to blocking.
 - **Originating** XR-011, AD-026
-- **Depends on** P0-CFG-001
+- **Depends on** P0-CFG-001, P0-CFG-004
 - **Tier** IMPORTANT · **Size** S · **Owner** Architecture
 
 ---
@@ -1033,7 +1048,7 @@ Land the empty production substrate that everything else builds on; establish go
 | Security | P0-GCP-004..005, P0-IAM-001..003, P0-VPC-001..003, P0-KMS-001..004, P0-IAC-003, P0-CICD-002..005, P0-SEC-001, P0-SEC-002, P0-SEC-004 | P0-IAM-004, P0-CICD-006, P0-OBS-007, P0-SEC-003 |
 | Compliance | P0-COM-001..008, P0-COM-010, P0-COM-011, P0-ADR-009 | P0-COM-009, P0-ADR-001 |
 | UX | P0-UX-001, P0-UX-003, P0-UX-004 | P0-UX-002, P0-UX-005 |
-| Infrastructure | P0-GCP-001..002, P0-DAT-001..005, P0-IAC-001..002, P0-CICD-001, P0-OBS-001..004 | P0-CFG-003, P0-GCP-003 |
+| Infrastructure | P0-GCP-001..002, P0-DAT-001..005, P0-IAC-001..002, P0-CICD-001, P0-OBS-001..004, P0-CFG-004 | P0-CFG-003, P0-CFG-005, P0-GCP-003 |
 
 ## Phase 0 risk-register linkage
 
