@@ -16,8 +16,10 @@ from pathlib import Path
 
 import psycopg
 
+from prototype.audit import AuditChain, AuditEvent
 from prototype.canonical_lookup import PostgresCanonicalLookup
 from prototype.csv_adapter import read_csv
+from prototype.deletion import is_suppressed, operator_override
 from prototype.demo import run_full_demo
 from prototype.identity import TIER_1, TIER_2, TIER_3, TIER_4, TierThresholds
 from prototype.verification import (
@@ -172,6 +174,9 @@ def _cli() -> int:
     _print_section("PRD #4 — Verification API live calls")
     _run_verification_demo(conn, args.fixtures)
 
+    _print_section("BR-704 — Operator override (re-allow a suppressed identity)")
+    _run_override_demo(conn, args.fixtures, result.audit_chain_path)
+
     _print_section("PRD #6 — Redaction scanner")
     if not result.redaction_matches:
         print("  PASS — zero PII pattern matches across the audit chain.")
@@ -276,6 +281,109 @@ def _run_verification_demo(conn: object, fixtures_dir: Path) -> None:
         response = client.post("/v1/verify", json=body)
         status = response.json().get("status", "?")
         print(f"  {label:55s} -> {status}")
+
+
+def _run_override_demo(conn: object, fixtures_dir: Path, chain_path: Path) -> None:
+    """Demonstrate BR-704 operator override:
+
+    1. Suppression hash for the deletion fixture's broad form is in the ledger.
+    2. is_suppressed(...) returns True before override.
+    3. Operator runs operator_override(target_hash, reason).
+    4. is_suppressed(...) returns False after.
+    5. DELETION_OVERRIDE event lands on the audit chain. Chain validates.
+    """
+    import json as _json
+
+    inventory = _json.loads((fixtures_dir / "scenario_inventory.json").read_text())
+    deletion_pmid = next(
+        e["partner_member_id"]
+        for e in inventory["records"]
+        if e["scenario"] == "deletion_fixture" and "partner_a_day1" in e["feed"]
+    )
+    rows = list(read_csv(fixtures_dir / "partner_a_day1.csv"))
+    target = next(r for r in rows if r["member_id"] == deletion_pmid)
+
+    last_name = target["LastName"]
+    m, d, y = target["DOB"].split("/")
+    dob = f"{int(y):04d}-{int(m):02d}-{int(d):02d}"
+    ssn_last4 = target["SSN"][-4:] if target["SSN"] else None
+
+    # Simulate the day-2 reintroduction's identity (PARTNER_B:B99999 with
+    # a name typo) — that's the record that got suppressed.
+    reintro_last_name = _typo_last_name(last_name)
+    suppressed_before = is_suppressed(
+        conn,
+        last_name=reintro_last_name,
+        dob=dob,
+        partner_id="PARTNER_B",
+        partner_member_id="B99999",
+        ssn_last4=ssn_last4,
+    )
+    print(f"  Before override: is_suppressed(...) = {suppressed_before}")
+
+    # Look up a broad suppression hash from the ledger to override. The
+    # broad hash is the only one that catches the cross-partner-name-typo
+    # reintroduction; in production the operator UI would show it.
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT suppression_hash
+          FROM deletion_ledger
+         ORDER BY ledger_id DESC
+        """
+    )
+    hashes = [row[0] for row in cur.fetchall()]
+
+    # Try each hash; the broad one will lift the broad-hash suppression
+    # for this identity.
+    chain = AuditChain(chain_path)
+    overridden_hashes: list[str] = []
+    for h in hashes:
+        try:
+            event = operator_override(
+                conn,
+                target_hash=h,
+                reason="legal-cleared re-enrollment after appeal",
+            )
+            chain.append(
+                AuditEvent(
+                    event_class=event.event_class,
+                    actor_role=event.actor_role,
+                    target_token=event.target_token,
+                    outcome=event.outcome,
+                    trigger=event.trigger,
+                    context=event.context,
+                )
+            )
+            overridden_hashes.append(h)
+        except ValueError:
+            # Hash not found — shouldn't happen since we read from the ledger.
+            continue
+    conn.commit()
+
+    suppressed_after = is_suppressed(
+        conn,
+        last_name=reintro_last_name,
+        dob=dob,
+        partner_id="PARTNER_B",
+        partner_member_id="B99999",
+        ssn_last4=ssn_last4,
+    )
+    print(f"  After override:  is_suppressed(...) = {suppressed_after}")
+    print(f"  Override applied to {len(overridden_hashes)} ledger row(s).")
+
+    revalid = chain.validate()
+    print(
+        f"  Audit chain after DELETION_OVERRIDE event: "
+        f"{'VALID' if revalid.valid else 'BROKEN at line ' + str(revalid.broken_at_line)}"
+    )
+
+
+def _typo_last_name(name: str) -> str:
+    """Match the synthetic-data typo rule: drop the third character."""
+    if len(name) < 3:
+        return name + "x"
+    return name[:2] + name[3:]
 
 
 if __name__ == "__main__":
