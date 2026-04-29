@@ -1,0 +1,316 @@
+# .github/workflows/ci.yml
+#
+# Continuous Integration — lore-eligibility
+#
+# Full quality gates via Poetry. Runs on every push and pull request.
+# Jobs are chained so a security failure short-circuits all downstream work.
+#
+# Job order: security → lint → test → integration-test (parallel)
+# shellcheck and docs-gate run independently (no Python deps required).
+#
+# Supply-chain hardening: all `uses:` lines are pinned to immutable
+# commit SHAs. The SHA comment shows the version tag each SHA resolves to.
+# To update an action: look up the new tag's commit SHA via
+#   gh api repos/<owner>/<repo>/git/ref/tags/<tag> --jq '.object.sha'
+# then replace both the SHA and the version comment below.
+#
+# Mutation testing (mutmut) runs LOCALLY as a PM gate via `make merge-pr`,
+# not in CI. GitHub Actions runners cannot complete mutation runs within
+# the budget. See CONSTITUTION Section 4 enforcement table.
+#
+# Python version: 3.12 (production gate — HIPAA shops lag latest).
+
+name: CI
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+      - "feat/**"
+      - "fix/**"
+      - "chore/**"
+      - "refactor/**"
+      - "test/**"
+      - "docs/**"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Change detection — determines which jobs need to run based on changed
+  # files. Docs-only PRs skip expensive Python jobs. Security and shellcheck
+  # always run regardless of changed files.
+  # ---------------------------------------------------------------------------
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      python: ${{ steps.filter.outputs.python }}
+      ci: ${{ steps.filter.outputs.ci }}
+      docs_only: ${{ steps.filter.outputs.docs_only }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Check changed file paths
+        id: filter
+        run: |
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "python=true" >> "$GITHUB_OUTPUT"
+            echo "ci=true" >> "$GITHUB_OUTPUT"
+            echo "docs_only=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE=$(git merge-base "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}")
+            HEAD="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE="${{ github.event.before }}"
+            HEAD="${{ github.sha }}"
+          fi
+
+          CHANGED=$(git diff --name-only "$BASE" "$HEAD")
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          PYTHON=$(echo "$CHANGED" | grep -cE '\.(py|toml|lock)$|^pyproject|^poetry' || true)
+          CI_FILES=$(echo "$CHANGED" | grep -cE '^\.github/' || true)
+
+          if [ "$PYTHON" -gt 0 ] || [ "$CI_FILES" -gt 0 ]; then
+            echo "python=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "python=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "ci=$( [ "$CI_FILES" -gt 0 ] && echo true || echo false )" >> "$GITHUB_OUTPUT"
+
+          if [ "$PYTHON" -eq 0 ] && [ "$CI_FILES" -eq 0 ]; then
+            echo "docs_only=true" >> "$GITHUB_OUTPUT"
+            echo ">>> Docs-only change detected — skipping Python jobs"
+          else
+            echo "docs_only=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ---------------------------------------------------------------------------
+  # Security scan — runs first, fails fast on secrets/credential leaks
+  # ---------------------------------------------------------------------------
+  security:
+    name: Security Scan (gitleaks)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ---------------------------------------------------------------------------
+  # Lint — ruff, mypy, bandit, vulture, import-linter, pip-audit
+  # Runs after security to ensure no credential leaks reach expensive checks
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Lint & Static Analysis
+    runs-on: ubuntu-latest
+    needs: [security, changes]
+    if: needs.changes.outputs.python == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a # v1.4.1
+        with:
+          version: "2.2.1"
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-py3.12-${{ hashFiles('poetry.lock') }}
+          restore-keys: venv-${{ runner.os }}-py3.12-
+
+      - name: Verify poetry.lock is in sync with pyproject.toml
+        run: poetry check --lock
+
+      - name: Install dependencies
+        run: poetry install --with dev
+
+      - name: Ruff lint
+        run: poetry run ruff check src/ tests/ scripts/
+
+      - name: Ruff format check
+        run: poetry run ruff format --check src/ tests/ scripts/
+
+      - name: Mypy type check
+        run: poetry run mypy src/
+
+      - name: Bandit security scan
+        run: poetry run bandit -c pyproject.toml -r src/ scripts/
+
+      - name: Vulture dead code scan
+        run: poetry run vulture src/ .vulture_whitelist.py
+
+      - name: Import-linter boundary check
+        run: poetry run lint-imports
+
+      - name: pip-audit dependency vulnerability scan
+        run: bash scripts/pip-audit.sh
+
+  # ---------------------------------------------------------------------------
+  # Unit tests — pytest with 95% coverage gate
+  # ---------------------------------------------------------------------------
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: [lint, changes]
+    if: needs.changes.outputs.python == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a # v1.4.1
+        with:
+          version: "2.2.1"
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-py3.12-${{ hashFiles('poetry.lock') }}
+          restore-keys: venv-${{ runner.os }}-py3.12-
+
+      - name: Install dependencies
+        run: poetry install --with dev
+
+      - name: Run unit tests with coverage
+        run: >
+          poetry run pytest tests/unit/
+          --cov=src/lore_eligibility
+          --cov-report=term-missing
+          --cov-fail-under=95
+
+  # ---------------------------------------------------------------------------
+  # Integration tests — pytest-postgresql in pg_ctl process mode
+  # ---------------------------------------------------------------------------
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [test, changes]
+    if: needs.changes.outputs.python == 'true'
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Set up Python 3.12
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
+      - name: Install Poetry
+        uses: snok/install-poetry@76e04a911780d5b312d89783f7b1cd627778900a # v1.4.1
+        with:
+          version: "2.2.1"
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      - name: Install PostgreSQL 16 (provides pg_ctl for pytest-postgresql)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql-16 postgresql-client-16 libpq-dev
+          echo "PG_BIN=/usr/lib/postgresql/16/bin" >> $GITHUB_ENV
+          echo "/usr/lib/postgresql/16/bin" >> $GITHUB_PATH
+      - name: Validate pg_ctl is on PATH
+        run: pg_ctl --version
+      - name: Install dependencies
+        run: poetry install --with dev
+      - name: Run integration tests (skip if directory empty)
+        run: |
+          if find tests/integration -name 'test_*.py' -print -quit 2>/dev/null | grep -q .; then
+            poetry run pytest tests/integration/ -v --tb=short --no-cov
+          else
+            echo "No integration tests yet — skipping (CI will fail once tests exist if they fail)."
+          fi
+
+  # ---------------------------------------------------------------------------
+  # Shell lint — shellcheck on all hook and script .sh files
+  # Runs independently — no Python deps required
+  # ---------------------------------------------------------------------------
+  shellcheck:
+    name: Shell Lint (shellcheck)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run shellcheck
+        run: |
+          if find scripts/ .claude/hooks/ -name '*.sh' -print -quit 2>/dev/null | grep -q .; then
+            find scripts/ .claude/hooks/ -name "*.sh" -print0 \
+              | xargs -0 shellcheck --severity=warning
+          else
+            echo "No shell scripts found — skipping shellcheck."
+          fi
+
+  # ---------------------------------------------------------------------------
+  # Docs gate — enforces Constitution Priority 6 (Documentation currency)
+  # Every PR branch must contain at least one commit beginning with "docs:"
+  # If no documentation was changed, the commit message must be:
+  #   docs: no documentation changes required — <one-sentence justification>
+  # ---------------------------------------------------------------------------
+  docs-gate:
+    name: Documentation Gate (Constitution Priority 6)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Verify docs commit present on PR branch
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+          echo "Scanning commits from ${BASE} to ${HEAD} for docs: prefix..."
+          DOCS_COMMITS=$(git log "${BASE}..${HEAD}" --format="%s" | grep -c "^docs:" || true)
+          if [ "$DOCS_COMMITS" -eq 0 ]; then
+            echo ""
+            echo "ERROR: No 'docs:' commit found on this PR branch."
+            echo ""
+            echo "Constitution Priority 6 requires every PR to contain at least one"
+            echo "commit beginning with 'docs:'. If no documentation changed, add:"
+            echo ""
+            echo "  docs: no documentation changes required — <one-sentence justification>"
+            echo ""
+            echo "See CONSTITUTION.md Section 4 and CLAUDE.md Rule 9."
+            exit 1
+          fi
+          echo "Found ${DOCS_COMMITS} docs: commit(s). Constitution Priority 6: PASS."
