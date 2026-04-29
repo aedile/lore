@@ -13,6 +13,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 
 from lore_eligibility import __version__
+from lore_eligibility.bootstrapper.config_validation import validate_settings
 from lore_eligibility.bootstrapper.logging_config import configure_logging
 from lore_eligibility.bootstrapper.settings import get_settings
 
@@ -22,8 +23,17 @@ def create_app() -> FastAPI:
 
     Returns:
         Configured FastAPI app with /health and metadata.
+
+    Raises:
+        ConfigurationError: If startup configuration validation fails
+            in staging or production. See
+            ``bootstrapper.config_validation.validate_settings`` for
+            the rules.
     """
     settings = get_settings()
+
+    # Fail fast on insecure config in staging / production. No-op in dev.
+    validate_settings(settings)
 
     # Configure PII-redacting structured logging before any code path can
     # emit a log record. JSON output in non-dev environments; console

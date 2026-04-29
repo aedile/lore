@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     pii_encryption_key: str = ""
     artifact_signing_key: str = ""
     auth_mode: str = "jwt"
+    database_tls_enabled: bool = False
     telemetry_enabled: bool = True
 
 
