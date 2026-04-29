@@ -32,7 +32,7 @@ import re
 import sys
 from collections.abc import Mapping, MutableMapping
 from re import Pattern
-from typing import Any
+from typing import Any, cast
 
 import structlog
 
@@ -261,4 +261,4 @@ def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
     Returns:
         A structlog BoundLogger configured with PII redaction.
     """
-    return structlog.get_logger(name)
+    return cast(structlog.stdlib.BoundLogger, structlog.get_logger(name))
