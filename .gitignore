@@ -70,3 +70,4 @@ prototype/*.duckdb.wal
 prototype/*.db
 prototype/*.sqlite
 prototype/*.sqlite3
+poetry.lock

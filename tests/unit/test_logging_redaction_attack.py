@@ -151,9 +151,7 @@ def test_redact_pii_patterns_masks_iso_dob() -> None:
 @pytest.mark.attack
 def test_redact_pii_patterns_handles_multiple_in_one_string() -> None:
     """Multiple PII tokens in the same string are all redacted."""
-    event = {
-        "event": "user user@example.com (SSN 123-45-6789) called 555-123-4567"
-    }
+    event = {"event": "user user@example.com (SSN 123-45-6789) called 555-123-4567"}
     out = redact_pii_patterns(None, "info", event)
     assert "user@example.com" not in out["event"]
     assert "123-45-6789" not in out["event"]

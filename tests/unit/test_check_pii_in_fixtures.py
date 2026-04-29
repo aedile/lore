@@ -129,9 +129,7 @@ def test_scan_file_reports_findings_with_lineno(tmp_path: Path) -> None:
     """scan_file returns (path, lineno, kind, sample) tuples."""
     fixture = tmp_path / "fixture.csv"
     fixture.write_text(
-        "id,ssn\n"
-        "1,123-45-6789\n"
-        "2,987-65-4321\n",
+        "id,ssn\n1,123-45-6789\n2,987-65-4321\n",
         encoding="utf-8",
     )
     findings = gate.scan_file(fixture)
@@ -163,23 +161,17 @@ def test_main_returns_zero_on_clean_tree(
 ) -> None:
     """main() returns 0 when no PII is found."""
     (tmp_path / "fixtures").mkdir()
-    (tmp_path / "fixtures" / "f.csv").write_text(
-        "id,score\n1,0.5\n", encoding="utf-8"
-    )
+    (tmp_path / "fixtures" / "f.csv").write_text("id,score\n1,0.5\n", encoding="utf-8")
     code = gate.main([str(tmp_path / "fixtures")])
     assert code == 0
 
 
 @pytest.mark.unit
 @pytest.mark.attack
-def test_main_returns_one_on_dirty_tree(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
+def test_main_returns_one_on_dirty_tree(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     """main() returns 1 and prints findings when PII is found."""
     (tmp_path / "fixtures").mkdir()
-    (tmp_path / "fixtures" / "f.csv").write_text(
-        "id,ssn\n1,123-45-6789\n", encoding="utf-8"
-    )
+    (tmp_path / "fixtures" / "f.csv").write_text("id,ssn\n1,123-45-6789\n", encoding="utf-8")
     code = gate.main([str(tmp_path / "fixtures")])
     assert code == 1
     captured = capsys.readouterr()
