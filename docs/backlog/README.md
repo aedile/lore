@@ -93,15 +93,15 @@ Compliance and UX stories are distributed across phases, not end-loaded. Each ph
 
 ## Traceability index
 
-Every story declares its originating BR/ADR/RR. CI gate (per BRD XR-012) verifies the inverse: every BR has at least one story implementing it across all phases combined. The traceability matrix is generated, not maintained by hand:
+Every story declares its originating BR/ADR/RR. The CI gate per BRD XR-012 verifies the inverse: every BR has at least one story implementing it across all phases combined. The traceability matrix is generated, not maintained by hand, by the script `scripts/build_traceability_matrix.py`.
+
+**Current status:** PLANNED. The traceability gate is specified in BRD XR-012 and the implementing script is tracked as backlog item P0-OBS-009. Until P0-OBS-009 lands, bidirectional traceability is enforced by convention and review, not by automated gate. This matches the LIVE / STUBBED / PLANNED-PHASE-N pattern from `HIPAA_POSTURE.md`.
+
+Generated artifact is not committed; CI rebuilds and diffs to detect orphan rules once the gate is LIVE.
 
 ```
 scripts/build_traceability_matrix.py docs/backlog/*.md > docs/backlog/traceability.generated.md
 ```
-
-Generated artifact is not committed; CI rebuilds and diffs to detect orphan rules.
-
-(Script is itself a backlog item — see P0-OBS-009.)
 
 ---
 
