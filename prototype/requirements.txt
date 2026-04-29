@@ -3,3 +3,6 @@
 #     poetry run pip install -r prototype/requirements.txt
 
 PyYAML>=6.0,<7.0
+# A4 — Splink on DuckDB for probabilistic identity resolution per AD-011/012.
+splink>=4.0,<5.0
+duckdb>=1.0,<2.0
