@@ -143,6 +143,10 @@ else
     RESULTS+=("{\"gate\":\"integration-mock-gate\",\"status\":\"SKIP\",\"duration_s\":0}")
 fi
 
+# PII-in-test-fixtures gate (CONSTITUTION Priority 0 — HIPAA / PHI handling).
+# Runs unconditionally even when fixture dirs are empty (vacuous pass).
+run_gate "pii-in-fixtures" "python3 scripts/check_pii_in_fixtures.py"
+
 # ---------------------------------------------------------------------------
 # Mutation testing gate (T30.1)
 #

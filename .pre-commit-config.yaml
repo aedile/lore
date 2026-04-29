@@ -161,3 +161,18 @@ repos:
         language: system
         files: \.md$
         pass_filenames: false
+
+  # ---------------------------------------------------------------------------
+  # PII-in-test-fixtures detection (CONSTITUTION Priority 0)
+  #
+  # Scans tests/fixtures/, tests/integration/, sample_data/ for SSN-shaped,
+  # phone-shaped, DOB-shaped, and real-domain-email-shaped substrings.
+  # Per-line opt-out via `# pii-allowed: <reason>` comment for legitimately
+  # fictional / Faker-generated data.
+  # ---------------------------------------------------------------------------
+      - id: check-pii-in-fixtures
+        name: check-pii-in-fixtures
+        entry: python3 scripts/check_pii_in_fixtures.py
+        language: system
+        files: ^(tests/(fixtures|integration)|sample_data)/.*\.(py|json|jsonl|csv|tsv|txt|yaml|yml|sql)$
+        pass_filenames: false
