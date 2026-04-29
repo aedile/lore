@@ -1,0 +1,7272 @@
+{
+  "schema_version": 1,
+  "seed": 42,
+  "count_per_partner": 300,
+  "partners": [
+    "PARTNER_A",
+    "PARTNER_B"
+  ],
+  "scenarios": {
+    "clean": "Normal record, all required fields populated, no mutations.",
+    "within_feed_duplicate_winner": "Last occurrence of a duplicated partner_member_id within a feed; should win in BR-601 last-record-wins dedup.",
+    "within_feed_duplicate_loser": "Earlier occurrence of a duplicated partner_member_id; loses to the later row in BR-601 dedup.",
+    "missing_required_last_name": "Last name field is empty \u2014 should fail BR-301 Required-tier validation and route to per-record quarantine (BR-302).",
+    "invalid_required_dob": "DOB field is empty \u2014 should fail BR-301 Required-tier validation.",
+    "format_error_short_year": "DOB rendered with 2-digit year (e.g., '4/12/85') \u2014 exercises date-format normalization in the DQ engine (A3).",
+    "cross_partner_near_match": "Same underlying truth identity present in both PARTNER_A and PARTNER_B feeds with deliberate mutations (name typo, address format diff). The Splink/DuckDB resolver (A4) must merge these via Tier 2 or queue them at Tier 3.",
+    "deletion_fixture": "Drives the BR-701..BR-704 demonstration: appears on PARTNER_A day 1, absent from PARTNER_A day 2 (deleted between snapshots), re-introduced on PARTNER_B day 2 with a name typo. The deletion ledger must suppress the re-introduction to SUPPRESSED_DELETED.",
+    "tier3_ambiguity": "Real-world coincidence: a PARTNER_B record shares first_name and ssn_last4 with a PARTNER_A truth but has different DOB + different last_name. Splink's match weight lands between the review and auto-merge thresholds (BR-101 Tier 3) \u2014 the pair routes to the review queue with the per-comparison breakdown so a human can decide MERGE vs DISTINCT."
+  },
+  "records": [
+    {
+      "partner_member_id": "A00000",
+      "truth_id": "T00000",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00001",
+      "truth_id": "T00001",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00002",
+      "truth_id": "T00002",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00003",
+      "truth_id": "T00003",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00004",
+      "truth_id": "T00004",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00005",
+      "truth_id": "T00005",
+      "scenario": "cross_partner_near_match",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00006",
+      "truth_id": "T00006",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00007",
+      "truth_id": "T00007",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00008",
+      "truth_id": "T00008",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00009",
+      "truth_id": "T00009",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00010",
+      "truth_id": "T00010",
+      "scenario": "cross_partner_near_match",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00011",
+      "truth_id": "T00011",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00012",
+      "truth_id": "T00012",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00013",
+      "truth_id": "T00013",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00014",
+      "truth_id": "T00014",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00015",
+      "truth_id": "T00015",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00016",
+      "truth_id": "T00016",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00017",
+      "truth_id": "T00017",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00018",
+      "truth_id": "T00018",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00019",
+      "truth_id": "T00019",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00020",
+      "truth_id": "T00020",
+      "scenario": "within_feed_duplicate_loser",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00020",
+      "truth_id": "T00020",
+      "scenario": "within_feed_duplicate_winner",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00021",
+      "truth_id": "T00021",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00022",
+      "truth_id": "T00022",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00023",
+      "truth_id": "T00023",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00024",
+      "truth_id": "T00024",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00025",
+      "truth_id": "T00025",
+      "scenario": "missing_required_last_name",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00026",
+      "truth_id": "T00026",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00027",
+      "truth_id": "T00027",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00028",
+      "truth_id": "T00028",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00029",
+      "truth_id": "T00029",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00030",
+      "truth_id": "T00030",
+      "scenario": "invalid_required_dob",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00031",
+      "truth_id": "T00031",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00032",
+      "truth_id": "T00032",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00033",
+      "truth_id": "T00033",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00034",
+      "truth_id": "T00034",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00035",
+      "truth_id": "T00035",
+      "scenario": "format_error_short_year",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00036",
+      "truth_id": "T00036",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00037",
+      "truth_id": "T00037",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00038",
+      "truth_id": "T00038",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00039",
+      "truth_id": "T00039",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00040",
+      "truth_id": "T00040",
+      "scenario": "deletion_fixture",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00041",
+      "truth_id": "T00041",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00042",
+      "truth_id": "T00042",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00043",
+      "truth_id": "T00043",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00044",
+      "truth_id": "T00044",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00045",
+      "truth_id": "T00045",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00046",
+      "truth_id": "T00046",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00047",
+      "truth_id": "T00047",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00048",
+      "truth_id": "T00048",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00049",
+      "truth_id": "T00049",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00050",
+      "truth_id": "T00050",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00051",
+      "truth_id": "T00051",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00052",
+      "truth_id": "T00052",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00053",
+      "truth_id": "T00053",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00054",
+      "truth_id": "T00054",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00055",
+      "truth_id": "T00055",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00056",
+      "truth_id": "T00056",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00057",
+      "truth_id": "T00057",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00058",
+      "truth_id": "T00058",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00059",
+      "truth_id": "T00059",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00060",
+      "truth_id": "T00060",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00061",
+      "truth_id": "T00061",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00062",
+      "truth_id": "T00062",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00063",
+      "truth_id": "T00063",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00064",
+      "truth_id": "T00064",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00065",
+      "truth_id": "T00065",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00066",
+      "truth_id": "T00066",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00067",
+      "truth_id": "T00067",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00068",
+      "truth_id": "T00068",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00069",
+      "truth_id": "T00069",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00070",
+      "truth_id": "T00070",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00071",
+      "truth_id": "T00071",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00072",
+      "truth_id": "T00072",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00073",
+      "truth_id": "T00073",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00074",
+      "truth_id": "T00074",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00075",
+      "truth_id": "T00075",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00076",
+      "truth_id": "T00076",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00077",
+      "truth_id": "T00077",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00078",
+      "truth_id": "T00078",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00079",
+      "truth_id": "T00079",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00080",
+      "truth_id": "T00080",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00081",
+      "truth_id": "T00081",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00082",
+      "truth_id": "T00082",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00083",
+      "truth_id": "T00083",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00084",
+      "truth_id": "T00084",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00085",
+      "truth_id": "T00085",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00086",
+      "truth_id": "T00086",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00087",
+      "truth_id": "T00087",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00088",
+      "truth_id": "T00088",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00089",
+      "truth_id": "T00089",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00090",
+      "truth_id": "T00090",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00091",
+      "truth_id": "T00091",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00092",
+      "truth_id": "T00092",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00093",
+      "truth_id": "T00093",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00094",
+      "truth_id": "T00094",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00095",
+      "truth_id": "T00095",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00096",
+      "truth_id": "T00096",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00097",
+      "truth_id": "T00097",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00098",
+      "truth_id": "T00098",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00099",
+      "truth_id": "T00099",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00100",
+      "truth_id": "T00100",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00101",
+      "truth_id": "T00101",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00102",
+      "truth_id": "T00102",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00103",
+      "truth_id": "T00103",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00104",
+      "truth_id": "T00104",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00105",
+      "truth_id": "T00105",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00106",
+      "truth_id": "T00106",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00107",
+      "truth_id": "T00107",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00108",
+      "truth_id": "T00108",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00109",
+      "truth_id": "T00109",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00110",
+      "truth_id": "T00110",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00111",
+      "truth_id": "T00111",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00112",
+      "truth_id": "T00112",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00113",
+      "truth_id": "T00113",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00114",
+      "truth_id": "T00114",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00115",
+      "truth_id": "T00115",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00116",
+      "truth_id": "T00116",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00117",
+      "truth_id": "T00117",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00118",
+      "truth_id": "T00118",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00119",
+      "truth_id": "T00119",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00120",
+      "truth_id": "T00120",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00121",
+      "truth_id": "T00121",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00122",
+      "truth_id": "T00122",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00123",
+      "truth_id": "T00123",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00124",
+      "truth_id": "T00124",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00125",
+      "truth_id": "T00125",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00126",
+      "truth_id": "T00126",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00127",
+      "truth_id": "T00127",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00128",
+      "truth_id": "T00128",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00129",
+      "truth_id": "T00129",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00130",
+      "truth_id": "T00130",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00131",
+      "truth_id": "T00131",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00132",
+      "truth_id": "T00132",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00133",
+      "truth_id": "T00133",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00134",
+      "truth_id": "T00134",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00135",
+      "truth_id": "T00135",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00136",
+      "truth_id": "T00136",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00137",
+      "truth_id": "T00137",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00138",
+      "truth_id": "T00138",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00139",
+      "truth_id": "T00139",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00140",
+      "truth_id": "T00140",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00141",
+      "truth_id": "T00141",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00142",
+      "truth_id": "T00142",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00143",
+      "truth_id": "T00143",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00144",
+      "truth_id": "T00144",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00145",
+      "truth_id": "T00145",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00146",
+      "truth_id": "T00146",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00147",
+      "truth_id": "T00147",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00148",
+      "truth_id": "T00148",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00149",
+      "truth_id": "T00149",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00150",
+      "truth_id": "T00150",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00151",
+      "truth_id": "T00151",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00152",
+      "truth_id": "T00152",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00153",
+      "truth_id": "T00153",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00154",
+      "truth_id": "T00154",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00155",
+      "truth_id": "T00155",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00156",
+      "truth_id": "T00156",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00157",
+      "truth_id": "T00157",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00158",
+      "truth_id": "T00158",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00159",
+      "truth_id": "T00159",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00160",
+      "truth_id": "T00160",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00161",
+      "truth_id": "T00161",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00162",
+      "truth_id": "T00162",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00163",
+      "truth_id": "T00163",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00164",
+      "truth_id": "T00164",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00165",
+      "truth_id": "T00165",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00166",
+      "truth_id": "T00166",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00167",
+      "truth_id": "T00167",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00168",
+      "truth_id": "T00168",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00169",
+      "truth_id": "T00169",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00170",
+      "truth_id": "T00170",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00171",
+      "truth_id": "T00171",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00172",
+      "truth_id": "T00172",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00173",
+      "truth_id": "T00173",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00174",
+      "truth_id": "T00174",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00175",
+      "truth_id": "T00175",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00176",
+      "truth_id": "T00176",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00177",
+      "truth_id": "T00177",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00178",
+      "truth_id": "T00178",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00179",
+      "truth_id": "T00179",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00180",
+      "truth_id": "T00180",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00181",
+      "truth_id": "T00181",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00182",
+      "truth_id": "T00182",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00183",
+      "truth_id": "T00183",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00184",
+      "truth_id": "T00184",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00185",
+      "truth_id": "T00185",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00186",
+      "truth_id": "T00186",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00187",
+      "truth_id": "T00187",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00188",
+      "truth_id": "T00188",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00189",
+      "truth_id": "T00189",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00190",
+      "truth_id": "T00190",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00191",
+      "truth_id": "T00191",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00192",
+      "truth_id": "T00192",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00193",
+      "truth_id": "T00193",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00194",
+      "truth_id": "T00194",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00195",
+      "truth_id": "T00195",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00196",
+      "truth_id": "T00196",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00197",
+      "truth_id": "T00197",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00198",
+      "truth_id": "T00198",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00199",
+      "truth_id": "T00199",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00200",
+      "truth_id": "T00200",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00201",
+      "truth_id": "T00201",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00202",
+      "truth_id": "T00202",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00203",
+      "truth_id": "T00203",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00204",
+      "truth_id": "T00204",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00205",
+      "truth_id": "T00205",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00206",
+      "truth_id": "T00206",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00207",
+      "truth_id": "T00207",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00208",
+      "truth_id": "T00208",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00209",
+      "truth_id": "T00209",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00210",
+      "truth_id": "T00210",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00211",
+      "truth_id": "T00211",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00212",
+      "truth_id": "T00212",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00213",
+      "truth_id": "T00213",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00214",
+      "truth_id": "T00214",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00215",
+      "truth_id": "T00215",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00216",
+      "truth_id": "T00216",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00217",
+      "truth_id": "T00217",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00218",
+      "truth_id": "T00218",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00219",
+      "truth_id": "T00219",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00220",
+      "truth_id": "T00220",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00221",
+      "truth_id": "T00221",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00222",
+      "truth_id": "T00222",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00223",
+      "truth_id": "T00223",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00224",
+      "truth_id": "T00224",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00225",
+      "truth_id": "T00225",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00226",
+      "truth_id": "T00226",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00227",
+      "truth_id": "T00227",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00228",
+      "truth_id": "T00228",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00229",
+      "truth_id": "T00229",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00230",
+      "truth_id": "T00230",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00231",
+      "truth_id": "T00231",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00232",
+      "truth_id": "T00232",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00233",
+      "truth_id": "T00233",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00234",
+      "truth_id": "T00234",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00235",
+      "truth_id": "T00235",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00236",
+      "truth_id": "T00236",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00237",
+      "truth_id": "T00237",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00238",
+      "truth_id": "T00238",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00239",
+      "truth_id": "T00239",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00240",
+      "truth_id": "T00240",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00241",
+      "truth_id": "T00241",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00242",
+      "truth_id": "T00242",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00243",
+      "truth_id": "T00243",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00244",
+      "truth_id": "T00244",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00245",
+      "truth_id": "T00245",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00246",
+      "truth_id": "T00246",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00247",
+      "truth_id": "T00247",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00248",
+      "truth_id": "T00248",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00249",
+      "truth_id": "T00249",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00250",
+      "truth_id": "T00250",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00251",
+      "truth_id": "T00251",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00252",
+      "truth_id": "T00252",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00253",
+      "truth_id": "T00253",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00254",
+      "truth_id": "T00254",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00255",
+      "truth_id": "T00255",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00256",
+      "truth_id": "T00256",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00257",
+      "truth_id": "T00257",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00258",
+      "truth_id": "T00258",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00259",
+      "truth_id": "T00259",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00260",
+      "truth_id": "T00260",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00261",
+      "truth_id": "T00261",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00262",
+      "truth_id": "T00262",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00263",
+      "truth_id": "T00263",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00264",
+      "truth_id": "T00264",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00265",
+      "truth_id": "T00265",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00266",
+      "truth_id": "T00266",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00267",
+      "truth_id": "T00267",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00268",
+      "truth_id": "T00268",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00269",
+      "truth_id": "T00269",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00270",
+      "truth_id": "T00270",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00271",
+      "truth_id": "T00271",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00272",
+      "truth_id": "T00272",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00273",
+      "truth_id": "T00273",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00274",
+      "truth_id": "T00274",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00275",
+      "truth_id": "T00275",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00276",
+      "truth_id": "T00276",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00277",
+      "truth_id": "T00277",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00278",
+      "truth_id": "T00278",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00279",
+      "truth_id": "T00279",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00280",
+      "truth_id": "T00280",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00281",
+      "truth_id": "T00281",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00282",
+      "truth_id": "T00282",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00283",
+      "truth_id": "T00283",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00284",
+      "truth_id": "T00284",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00285",
+      "truth_id": "T00285",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00286",
+      "truth_id": "T00286",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00287",
+      "truth_id": "T00287",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00288",
+      "truth_id": "T00288",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00289",
+      "truth_id": "T00289",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00290",
+      "truth_id": "T00290",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00291",
+      "truth_id": "T00291",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00292",
+      "truth_id": "T00292",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00293",
+      "truth_id": "T00293",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00294",
+      "truth_id": "T00294",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00295",
+      "truth_id": "T00295",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00296",
+      "truth_id": "T00296",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00297",
+      "truth_id": "T00297",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00298",
+      "truth_id": "T00298",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00299",
+      "truth_id": "T00299",
+      "scenario": "clean",
+      "feed": "partner_a_day1.csv"
+    },
+    {
+      "partner_member_id": "A00000",
+      "truth_id": "T00000",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00001",
+      "truth_id": "T00001",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00002",
+      "truth_id": "T00002",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00003",
+      "truth_id": "T00003",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00004",
+      "truth_id": "T00004",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00005",
+      "truth_id": "T00005",
+      "scenario": "cross_partner_near_match",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00006",
+      "truth_id": "T00006",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00007",
+      "truth_id": "T00007",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00008",
+      "truth_id": "T00008",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00009",
+      "truth_id": "T00009",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00010",
+      "truth_id": "T00010",
+      "scenario": "cross_partner_near_match",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00011",
+      "truth_id": "T00011",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00012",
+      "truth_id": "T00012",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00013",
+      "truth_id": "T00013",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00014",
+      "truth_id": "T00014",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00015",
+      "truth_id": "T00015",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00016",
+      "truth_id": "T00016",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00017",
+      "truth_id": "T00017",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00018",
+      "truth_id": "T00018",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00019",
+      "truth_id": "T00019",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00020",
+      "truth_id": "T00020",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00021",
+      "truth_id": "T00021",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00022",
+      "truth_id": "T00022",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00023",
+      "truth_id": "T00023",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00024",
+      "truth_id": "T00024",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00025",
+      "truth_id": "T00025",
+      "scenario": "missing_required_last_name",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00026",
+      "truth_id": "T00026",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00027",
+      "truth_id": "T00027",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00028",
+      "truth_id": "T00028",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00029",
+      "truth_id": "T00029",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00030",
+      "truth_id": "T00030",
+      "scenario": "invalid_required_dob",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00031",
+      "truth_id": "T00031",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00032",
+      "truth_id": "T00032",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00033",
+      "truth_id": "T00033",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00034",
+      "truth_id": "T00034",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00035",
+      "truth_id": "T00035",
+      "scenario": "format_error_short_year",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00036",
+      "truth_id": "T00036",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00037",
+      "truth_id": "T00037",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00038",
+      "truth_id": "T00038",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00039",
+      "truth_id": "T00039",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00041",
+      "truth_id": "T00041",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00042",
+      "truth_id": "T00042",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00043",
+      "truth_id": "T00043",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00044",
+      "truth_id": "T00044",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00045",
+      "truth_id": "T00045",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00046",
+      "truth_id": "T00046",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00047",
+      "truth_id": "T00047",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00048",
+      "truth_id": "T00048",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00049",
+      "truth_id": "T00049",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00050",
+      "truth_id": "T00050",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00051",
+      "truth_id": "T00051",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00052",
+      "truth_id": "T00052",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00053",
+      "truth_id": "T00053",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00054",
+      "truth_id": "T00054",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00055",
+      "truth_id": "T00055",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00056",
+      "truth_id": "T00056",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00057",
+      "truth_id": "T00057",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00058",
+      "truth_id": "T00058",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00059",
+      "truth_id": "T00059",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00060",
+      "truth_id": "T00060",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00061",
+      "truth_id": "T00061",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00062",
+      "truth_id": "T00062",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00063",
+      "truth_id": "T00063",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00064",
+      "truth_id": "T00064",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00065",
+      "truth_id": "T00065",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00066",
+      "truth_id": "T00066",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00067",
+      "truth_id": "T00067",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00068",
+      "truth_id": "T00068",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00069",
+      "truth_id": "T00069",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00070",
+      "truth_id": "T00070",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00071",
+      "truth_id": "T00071",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00072",
+      "truth_id": "T00072",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00073",
+      "truth_id": "T00073",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00074",
+      "truth_id": "T00074",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00075",
+      "truth_id": "T00075",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00076",
+      "truth_id": "T00076",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00077",
+      "truth_id": "T00077",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00078",
+      "truth_id": "T00078",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00079",
+      "truth_id": "T00079",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00080",
+      "truth_id": "T00080",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00081",
+      "truth_id": "T00081",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00082",
+      "truth_id": "T00082",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00083",
+      "truth_id": "T00083",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00084",
+      "truth_id": "T00084",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00085",
+      "truth_id": "T00085",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00086",
+      "truth_id": "T00086",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00087",
+      "truth_id": "T00087",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00088",
+      "truth_id": "T00088",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00089",
+      "truth_id": "T00089",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00090",
+      "truth_id": "T00090",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00091",
+      "truth_id": "T00091",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00092",
+      "truth_id": "T00092",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00093",
+      "truth_id": "T00093",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00094",
+      "truth_id": "T00094",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00095",
+      "truth_id": "T00095",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00096",
+      "truth_id": "T00096",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00097",
+      "truth_id": "T00097",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00098",
+      "truth_id": "T00098",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00099",
+      "truth_id": "T00099",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00100",
+      "truth_id": "T00100",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00101",
+      "truth_id": "T00101",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00102",
+      "truth_id": "T00102",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00103",
+      "truth_id": "T00103",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00104",
+      "truth_id": "T00104",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00105",
+      "truth_id": "T00105",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00106",
+      "truth_id": "T00106",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00107",
+      "truth_id": "T00107",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00108",
+      "truth_id": "T00108",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00109",
+      "truth_id": "T00109",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00110",
+      "truth_id": "T00110",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00111",
+      "truth_id": "T00111",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00112",
+      "truth_id": "T00112",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00113",
+      "truth_id": "T00113",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00114",
+      "truth_id": "T00114",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00115",
+      "truth_id": "T00115",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00116",
+      "truth_id": "T00116",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00117",
+      "truth_id": "T00117",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00118",
+      "truth_id": "T00118",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00119",
+      "truth_id": "T00119",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00120",
+      "truth_id": "T00120",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00121",
+      "truth_id": "T00121",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00122",
+      "truth_id": "T00122",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00123",
+      "truth_id": "T00123",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00124",
+      "truth_id": "T00124",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00125",
+      "truth_id": "T00125",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00126",
+      "truth_id": "T00126",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00127",
+      "truth_id": "T00127",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00128",
+      "truth_id": "T00128",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00129",
+      "truth_id": "T00129",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00130",
+      "truth_id": "T00130",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00131",
+      "truth_id": "T00131",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00132",
+      "truth_id": "T00132",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00133",
+      "truth_id": "T00133",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00134",
+      "truth_id": "T00134",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00135",
+      "truth_id": "T00135",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00136",
+      "truth_id": "T00136",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00137",
+      "truth_id": "T00137",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00138",
+      "truth_id": "T00138",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00139",
+      "truth_id": "T00139",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00140",
+      "truth_id": "T00140",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00141",
+      "truth_id": "T00141",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00142",
+      "truth_id": "T00142",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00143",
+      "truth_id": "T00143",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00144",
+      "truth_id": "T00144",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00145",
+      "truth_id": "T00145",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00146",
+      "truth_id": "T00146",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00147",
+      "truth_id": "T00147",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00148",
+      "truth_id": "T00148",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00149",
+      "truth_id": "T00149",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00150",
+      "truth_id": "T00150",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00151",
+      "truth_id": "T00151",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00152",
+      "truth_id": "T00152",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00153",
+      "truth_id": "T00153",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00154",
+      "truth_id": "T00154",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00155",
+      "truth_id": "T00155",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00156",
+      "truth_id": "T00156",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00157",
+      "truth_id": "T00157",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00158",
+      "truth_id": "T00158",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00159",
+      "truth_id": "T00159",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00160",
+      "truth_id": "T00160",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00161",
+      "truth_id": "T00161",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00162",
+      "truth_id": "T00162",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00163",
+      "truth_id": "T00163",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00164",
+      "truth_id": "T00164",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00165",
+      "truth_id": "T00165",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00166",
+      "truth_id": "T00166",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00167",
+      "truth_id": "T00167",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00168",
+      "truth_id": "T00168",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00169",
+      "truth_id": "T00169",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00170",
+      "truth_id": "T00170",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00171",
+      "truth_id": "T00171",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00172",
+      "truth_id": "T00172",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00173",
+      "truth_id": "T00173",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00174",
+      "truth_id": "T00174",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00175",
+      "truth_id": "T00175",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00176",
+      "truth_id": "T00176",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00177",
+      "truth_id": "T00177",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00178",
+      "truth_id": "T00178",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00179",
+      "truth_id": "T00179",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00180",
+      "truth_id": "T00180",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00181",
+      "truth_id": "T00181",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00182",
+      "truth_id": "T00182",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00183",
+      "truth_id": "T00183",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00184",
+      "truth_id": "T00184",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00185",
+      "truth_id": "T00185",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00186",
+      "truth_id": "T00186",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00187",
+      "truth_id": "T00187",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00188",
+      "truth_id": "T00188",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00189",
+      "truth_id": "T00189",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00190",
+      "truth_id": "T00190",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00191",
+      "truth_id": "T00191",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00192",
+      "truth_id": "T00192",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00193",
+      "truth_id": "T00193",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00194",
+      "truth_id": "T00194",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00195",
+      "truth_id": "T00195",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00196",
+      "truth_id": "T00196",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00197",
+      "truth_id": "T00197",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00198",
+      "truth_id": "T00198",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00199",
+      "truth_id": "T00199",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00200",
+      "truth_id": "T00200",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00201",
+      "truth_id": "T00201",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00202",
+      "truth_id": "T00202",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00203",
+      "truth_id": "T00203",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00204",
+      "truth_id": "T00204",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00205",
+      "truth_id": "T00205",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00206",
+      "truth_id": "T00206",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00207",
+      "truth_id": "T00207",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00208",
+      "truth_id": "T00208",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00209",
+      "truth_id": "T00209",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00210",
+      "truth_id": "T00210",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00211",
+      "truth_id": "T00211",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00212",
+      "truth_id": "T00212",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00213",
+      "truth_id": "T00213",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00214",
+      "truth_id": "T00214",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00215",
+      "truth_id": "T00215",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00216",
+      "truth_id": "T00216",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00217",
+      "truth_id": "T00217",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00218",
+      "truth_id": "T00218",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00219",
+      "truth_id": "T00219",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00220",
+      "truth_id": "T00220",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00221",
+      "truth_id": "T00221",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00222",
+      "truth_id": "T00222",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00223",
+      "truth_id": "T00223",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00224",
+      "truth_id": "T00224",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00225",
+      "truth_id": "T00225",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00226",
+      "truth_id": "T00226",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00227",
+      "truth_id": "T00227",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00228",
+      "truth_id": "T00228",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00229",
+      "truth_id": "T00229",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00230",
+      "truth_id": "T00230",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00231",
+      "truth_id": "T00231",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00232",
+      "truth_id": "T00232",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00233",
+      "truth_id": "T00233",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00234",
+      "truth_id": "T00234",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00235",
+      "truth_id": "T00235",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00236",
+      "truth_id": "T00236",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00237",
+      "truth_id": "T00237",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00238",
+      "truth_id": "T00238",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00239",
+      "truth_id": "T00239",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00240",
+      "truth_id": "T00240",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00241",
+      "truth_id": "T00241",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00242",
+      "truth_id": "T00242",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00243",
+      "truth_id": "T00243",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00244",
+      "truth_id": "T00244",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00245",
+      "truth_id": "T00245",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00246",
+      "truth_id": "T00246",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00247",
+      "truth_id": "T00247",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00248",
+      "truth_id": "T00248",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00249",
+      "truth_id": "T00249",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00250",
+      "truth_id": "T00250",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00251",
+      "truth_id": "T00251",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00252",
+      "truth_id": "T00252",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00253",
+      "truth_id": "T00253",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00254",
+      "truth_id": "T00254",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00255",
+      "truth_id": "T00255",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00256",
+      "truth_id": "T00256",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00257",
+      "truth_id": "T00257",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00258",
+      "truth_id": "T00258",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00259",
+      "truth_id": "T00259",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00260",
+      "truth_id": "T00260",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00261",
+      "truth_id": "T00261",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00262",
+      "truth_id": "T00262",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00263",
+      "truth_id": "T00263",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00264",
+      "truth_id": "T00264",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00265",
+      "truth_id": "T00265",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00266",
+      "truth_id": "T00266",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00267",
+      "truth_id": "T00267",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00268",
+      "truth_id": "T00268",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00269",
+      "truth_id": "T00269",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00270",
+      "truth_id": "T00270",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00271",
+      "truth_id": "T00271",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00272",
+      "truth_id": "T00272",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00273",
+      "truth_id": "T00273",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00274",
+      "truth_id": "T00274",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00275",
+      "truth_id": "T00275",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00276",
+      "truth_id": "T00276",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00277",
+      "truth_id": "T00277",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00278",
+      "truth_id": "T00278",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00279",
+      "truth_id": "T00279",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00280",
+      "truth_id": "T00280",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00281",
+      "truth_id": "T00281",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00282",
+      "truth_id": "T00282",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00283",
+      "truth_id": "T00283",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00284",
+      "truth_id": "T00284",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00285",
+      "truth_id": "T00285",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00286",
+      "truth_id": "T00286",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00287",
+      "truth_id": "T00287",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00288",
+      "truth_id": "T00288",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00289",
+      "truth_id": "T00289",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00290",
+      "truth_id": "T00290",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00291",
+      "truth_id": "T00291",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00292",
+      "truth_id": "T00292",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00293",
+      "truth_id": "T00293",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00294",
+      "truth_id": "T00294",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00295",
+      "truth_id": "T00295",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00296",
+      "truth_id": "T00296",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00297",
+      "truth_id": "T00297",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00298",
+      "truth_id": "T00298",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "A00299",
+      "truth_id": "T00299",
+      "scenario": "clean",
+      "feed": "partner_a_day2.csv"
+    },
+    {
+      "partner_member_id": "B00000",
+      "truth_id": "T00300",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00001",
+      "truth_id": "T00301",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00002",
+      "truth_id": "T00302",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00003",
+      "truth_id": "T00303",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00004",
+      "truth_id": "T00304",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00005",
+      "truth_id": "T00305",
+      "scenario": "within_feed_duplicate_loser",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00005",
+      "truth_id": "T00305",
+      "scenario": "within_feed_duplicate_winner",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00006",
+      "truth_id": "T00306",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00007",
+      "truth_id": "T00307",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00008",
+      "truth_id": "T00308",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00009",
+      "truth_id": "T00309",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00010",
+      "truth_id": "T00310",
+      "scenario": "missing_required_last_name",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00011",
+      "truth_id": "T00311",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00012",
+      "truth_id": "T00312",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00013",
+      "truth_id": "T00313",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00014",
+      "truth_id": "T00314",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00015",
+      "truth_id": "T00315",
+      "scenario": "invalid_required_dob",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00016",
+      "truth_id": "T00316",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00017",
+      "truth_id": "T00317",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00018",
+      "truth_id": "T00318",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00019",
+      "truth_id": "T00319",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00020",
+      "truth_id": "T00320",
+      "scenario": "format_error_short_year",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00021",
+      "truth_id": "T00321",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00022",
+      "truth_id": "T00322",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00023",
+      "truth_id": "T00323",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00024",
+      "truth_id": "T00324",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00025",
+      "truth_id": "T00325",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00026",
+      "truth_id": "T00326",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00027",
+      "truth_id": "T00327",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00028",
+      "truth_id": "T00328",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00029",
+      "truth_id": "T00329",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00030",
+      "truth_id": "T00330",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00031",
+      "truth_id": "T00331",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00032",
+      "truth_id": "T00332",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00033",
+      "truth_id": "T00333",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00034",
+      "truth_id": "T00334",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00035",
+      "truth_id": "T00335",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00036",
+      "truth_id": "T00336",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00037",
+      "truth_id": "T00337",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00038",
+      "truth_id": "T00338",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00039",
+      "truth_id": "T00339",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00040",
+      "truth_id": "T00340",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00041",
+      "truth_id": "T00341",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00042",
+      "truth_id": "T00342",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00043",
+      "truth_id": "T00343",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00044",
+      "truth_id": "T00344",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00045",
+      "truth_id": "T00345",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00046",
+      "truth_id": "T00346",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00047",
+      "truth_id": "T00347",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00048",
+      "truth_id": "T00348",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00049",
+      "truth_id": "T00349",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00050",
+      "truth_id": "T00350",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00051",
+      "truth_id": "T00351",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00052",
+      "truth_id": "T00352",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00053",
+      "truth_id": "T00353",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00054",
+      "truth_id": "T00354",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00055",
+      "truth_id": "T00355",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00056",
+      "truth_id": "T00356",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00057",
+      "truth_id": "T00357",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00058",
+      "truth_id": "T00358",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00059",
+      "truth_id": "T00359",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00060",
+      "truth_id": "T00360",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00061",
+      "truth_id": "T00361",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00062",
+      "truth_id": "T00362",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00063",
+      "truth_id": "T00363",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00064",
+      "truth_id": "T00364",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00065",
+      "truth_id": "T00365",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00066",
+      "truth_id": "T00366",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00067",
+      "truth_id": "T00367",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00068",
+      "truth_id": "T00368",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00069",
+      "truth_id": "T00369",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00070",
+      "truth_id": "T00370",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00071",
+      "truth_id": "T00371",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00072",
+      "truth_id": "T00372",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00073",
+      "truth_id": "T00373",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00074",
+      "truth_id": "T00374",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00075",
+      "truth_id": "T00375",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00076",
+      "truth_id": "T00376",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00077",
+      "truth_id": "T00377",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00078",
+      "truth_id": "T00378",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00079",
+      "truth_id": "T00379",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00080",
+      "truth_id": "T00380",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00081",
+      "truth_id": "T00381",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00082",
+      "truth_id": "T00382",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00083",
+      "truth_id": "T00383",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00084",
+      "truth_id": "T00384",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00085",
+      "truth_id": "T00385",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00086",
+      "truth_id": "T00386",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00087",
+      "truth_id": "T00387",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00088",
+      "truth_id": "T00388",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00089",
+      "truth_id": "T00389",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00090",
+      "truth_id": "T00390",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00091",
+      "truth_id": "T00391",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00092",
+      "truth_id": "T00392",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00093",
+      "truth_id": "T00393",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00094",
+      "truth_id": "T00394",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00095",
+      "truth_id": "T00395",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00096",
+      "truth_id": "T00396",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00097",
+      "truth_id": "T00397",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00098",
+      "truth_id": "T00398",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00099",
+      "truth_id": "T00399",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00100",
+      "truth_id": "T00400",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00101",
+      "truth_id": "T00401",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00102",
+      "truth_id": "T00402",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00103",
+      "truth_id": "T00403",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00104",
+      "truth_id": "T00404",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00105",
+      "truth_id": "T00405",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00106",
+      "truth_id": "T00406",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00107",
+      "truth_id": "T00407",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00108",
+      "truth_id": "T00408",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00109",
+      "truth_id": "T00409",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00110",
+      "truth_id": "T00410",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00111",
+      "truth_id": "T00411",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00112",
+      "truth_id": "T00412",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00113",
+      "truth_id": "T00413",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00114",
+      "truth_id": "T00414",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00115",
+      "truth_id": "T00415",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00116",
+      "truth_id": "T00416",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00117",
+      "truth_id": "T00417",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00118",
+      "truth_id": "T00418",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00119",
+      "truth_id": "T00419",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00120",
+      "truth_id": "T00420",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00121",
+      "truth_id": "T00421",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00122",
+      "truth_id": "T00422",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00123",
+      "truth_id": "T00423",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00124",
+      "truth_id": "T00424",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00125",
+      "truth_id": "T00425",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00126",
+      "truth_id": "T00426",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00127",
+      "truth_id": "T00427",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00128",
+      "truth_id": "T00428",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00129",
+      "truth_id": "T00429",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00130",
+      "truth_id": "T00430",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00131",
+      "truth_id": "T00431",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00132",
+      "truth_id": "T00432",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00133",
+      "truth_id": "T00433",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00134",
+      "truth_id": "T00434",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00135",
+      "truth_id": "T00435",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00136",
+      "truth_id": "T00436",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00137",
+      "truth_id": "T00437",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00138",
+      "truth_id": "T00438",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00139",
+      "truth_id": "T00439",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00140",
+      "truth_id": "T00440",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00141",
+      "truth_id": "T00441",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00142",
+      "truth_id": "T00442",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00143",
+      "truth_id": "T00443",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00144",
+      "truth_id": "T00444",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00145",
+      "truth_id": "T00445",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00146",
+      "truth_id": "T00446",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00147",
+      "truth_id": "T00447",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00148",
+      "truth_id": "T00448",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00149",
+      "truth_id": "T00449",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00150",
+      "truth_id": "T00450",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00151",
+      "truth_id": "T00451",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00152",
+      "truth_id": "T00452",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00153",
+      "truth_id": "T00453",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00154",
+      "truth_id": "T00454",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00155",
+      "truth_id": "T00455",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00156",
+      "truth_id": "T00456",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00157",
+      "truth_id": "T00457",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00158",
+      "truth_id": "T00458",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00159",
+      "truth_id": "T00459",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00160",
+      "truth_id": "T00460",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00161",
+      "truth_id": "T00461",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00162",
+      "truth_id": "T00462",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00163",
+      "truth_id": "T00463",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00164",
+      "truth_id": "T00464",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00165",
+      "truth_id": "T00465",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00166",
+      "truth_id": "T00466",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00167",
+      "truth_id": "T00467",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00168",
+      "truth_id": "T00468",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00169",
+      "truth_id": "T00469",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00170",
+      "truth_id": "T00470",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00171",
+      "truth_id": "T00471",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00172",
+      "truth_id": "T00472",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00173",
+      "truth_id": "T00473",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00174",
+      "truth_id": "T00474",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00175",
+      "truth_id": "T00475",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00176",
+      "truth_id": "T00476",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00177",
+      "truth_id": "T00477",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00178",
+      "truth_id": "T00478",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00179",
+      "truth_id": "T00479",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00180",
+      "truth_id": "T00480",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00181",
+      "truth_id": "T00481",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00182",
+      "truth_id": "T00482",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00183",
+      "truth_id": "T00483",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00184",
+      "truth_id": "T00484",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00185",
+      "truth_id": "T00485",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00186",
+      "truth_id": "T00486",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00187",
+      "truth_id": "T00487",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00188",
+      "truth_id": "T00488",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00189",
+      "truth_id": "T00489",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00190",
+      "truth_id": "T00490",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00191",
+      "truth_id": "T00491",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00192",
+      "truth_id": "T00492",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00193",
+      "truth_id": "T00493",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00194",
+      "truth_id": "T00494",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00195",
+      "truth_id": "T00495",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00196",
+      "truth_id": "T00496",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00197",
+      "truth_id": "T00497",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00198",
+      "truth_id": "T00498",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00199",
+      "truth_id": "T00499",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00200",
+      "truth_id": "T00500",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00201",
+      "truth_id": "T00501",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00202",
+      "truth_id": "T00502",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00203",
+      "truth_id": "T00503",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00204",
+      "truth_id": "T00504",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00205",
+      "truth_id": "T00505",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00206",
+      "truth_id": "T00506",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00207",
+      "truth_id": "T00507",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00208",
+      "truth_id": "T00508",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00209",
+      "truth_id": "T00509",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00210",
+      "truth_id": "T00510",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00211",
+      "truth_id": "T00511",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00212",
+      "truth_id": "T00512",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00213",
+      "truth_id": "T00513",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00214",
+      "truth_id": "T00514",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00215",
+      "truth_id": "T00515",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00216",
+      "truth_id": "T00516",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00217",
+      "truth_id": "T00517",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00218",
+      "truth_id": "T00518",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00219",
+      "truth_id": "T00519",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00220",
+      "truth_id": "T00520",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00221",
+      "truth_id": "T00521",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00222",
+      "truth_id": "T00522",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00223",
+      "truth_id": "T00523",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00224",
+      "truth_id": "T00524",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00225",
+      "truth_id": "T00525",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00226",
+      "truth_id": "T00526",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00227",
+      "truth_id": "T00527",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00228",
+      "truth_id": "T00528",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00229",
+      "truth_id": "T00529",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00230",
+      "truth_id": "T00530",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00231",
+      "truth_id": "T00531",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00232",
+      "truth_id": "T00532",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00233",
+      "truth_id": "T00533",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00234",
+      "truth_id": "T00534",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00235",
+      "truth_id": "T00535",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00236",
+      "truth_id": "T00536",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00237",
+      "truth_id": "T00537",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00238",
+      "truth_id": "T00538",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00239",
+      "truth_id": "T00539",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00240",
+      "truth_id": "T00540",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00241",
+      "truth_id": "T00541",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00242",
+      "truth_id": "T00542",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00243",
+      "truth_id": "T00543",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00244",
+      "truth_id": "T00544",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00245",
+      "truth_id": "T00545",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00246",
+      "truth_id": "T00546",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00247",
+      "truth_id": "T00547",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00248",
+      "truth_id": "T00548",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00249",
+      "truth_id": "T00549",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00250",
+      "truth_id": "T00550",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00251",
+      "truth_id": "T00551",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00252",
+      "truth_id": "T00552",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00253",
+      "truth_id": "T00553",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00254",
+      "truth_id": "T00554",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00255",
+      "truth_id": "T00555",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00256",
+      "truth_id": "T00556",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00257",
+      "truth_id": "T00557",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00258",
+      "truth_id": "T00558",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00259",
+      "truth_id": "T00559",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00260",
+      "truth_id": "T00560",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00261",
+      "truth_id": "T00561",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00262",
+      "truth_id": "T00562",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00263",
+      "truth_id": "T00563",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00264",
+      "truth_id": "T00564",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00265",
+      "truth_id": "T00565",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00266",
+      "truth_id": "T00566",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00267",
+      "truth_id": "T00567",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00268",
+      "truth_id": "T00568",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00269",
+      "truth_id": "T00569",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00270",
+      "truth_id": "T00570",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00271",
+      "truth_id": "T00571",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00272",
+      "truth_id": "T00572",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00273",
+      "truth_id": "T00573",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00274",
+      "truth_id": "T00574",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00275",
+      "truth_id": "T00575",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00276",
+      "truth_id": "T00576",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00277",
+      "truth_id": "T00577",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00278",
+      "truth_id": "T00578",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00279",
+      "truth_id": "T00579",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00280",
+      "truth_id": "T00580",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00281",
+      "truth_id": "T00581",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00282",
+      "truth_id": "T00582",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00283",
+      "truth_id": "T00583",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00284",
+      "truth_id": "T00584",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00285",
+      "truth_id": "T00585",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00286",
+      "truth_id": "T00586",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00287",
+      "truth_id": "T00587",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00288",
+      "truth_id": "T00588",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00289",
+      "truth_id": "T00589",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00290",
+      "truth_id": "T00590",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00291",
+      "truth_id": "T00591",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00292",
+      "truth_id": "T00592",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00293",
+      "truth_id": "T00593",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00294",
+      "truth_id": "T00594",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00295",
+      "truth_id": "T00595",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00296",
+      "truth_id": "T00596",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00297",
+      "truth_id": "T00597",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00298",
+      "truth_id": "T00598",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00299",
+      "truth_id": "T00599",
+      "scenario": "clean",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B90000",
+      "truth_id": "T00005",
+      "scenario": "cross_partner_near_match",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B90001",
+      "truth_id": "T00010",
+      "scenario": "cross_partner_near_match",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B80000",
+      "truth_id": "T3D000",
+      "scenario": "tier3_ambiguity",
+      "paired_with_truth_id": "T00050",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B80001",
+      "truth_id": "T3D001",
+      "scenario": "tier3_ambiguity",
+      "paired_with_truth_id": "T00055",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B00000",
+      "truth_id": "T00300",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00001",
+      "truth_id": "T00301",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00002",
+      "truth_id": "T00302",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00003",
+      "truth_id": "T00303",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00004",
+      "truth_id": "T00304",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00005",
+      "truth_id": "T00305",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00006",
+      "truth_id": "T00306",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00007",
+      "truth_id": "T00307",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00008",
+      "truth_id": "T00308",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00009",
+      "truth_id": "T00309",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00010",
+      "truth_id": "T00310",
+      "scenario": "missing_required_last_name",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00011",
+      "truth_id": "T00311",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00012",
+      "truth_id": "T00312",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00013",
+      "truth_id": "T00313",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00014",
+      "truth_id": "T00314",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00015",
+      "truth_id": "T00315",
+      "scenario": "invalid_required_dob",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00016",
+      "truth_id": "T00316",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00017",
+      "truth_id": "T00317",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00018",
+      "truth_id": "T00318",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00019",
+      "truth_id": "T00319",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00020",
+      "truth_id": "T00320",
+      "scenario": "format_error_short_year",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00021",
+      "truth_id": "T00321",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00022",
+      "truth_id": "T00322",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00023",
+      "truth_id": "T00323",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00024",
+      "truth_id": "T00324",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00025",
+      "truth_id": "T00325",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00026",
+      "truth_id": "T00326",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00027",
+      "truth_id": "T00327",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00028",
+      "truth_id": "T00328",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00029",
+      "truth_id": "T00329",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00030",
+      "truth_id": "T00330",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00031",
+      "truth_id": "T00331",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00032",
+      "truth_id": "T00332",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00033",
+      "truth_id": "T00333",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00034",
+      "truth_id": "T00334",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00035",
+      "truth_id": "T00335",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00036",
+      "truth_id": "T00336",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00037",
+      "truth_id": "T00337",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00038",
+      "truth_id": "T00338",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00039",
+      "truth_id": "T00339",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00040",
+      "truth_id": "T00340",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00041",
+      "truth_id": "T00341",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00042",
+      "truth_id": "T00342",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00043",
+      "truth_id": "T00343",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00044",
+      "truth_id": "T00344",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00045",
+      "truth_id": "T00345",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00046",
+      "truth_id": "T00346",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00047",
+      "truth_id": "T00347",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00048",
+      "truth_id": "T00348",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00049",
+      "truth_id": "T00349",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00050",
+      "truth_id": "T00350",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00051",
+      "truth_id": "T00351",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00052",
+      "truth_id": "T00352",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00053",
+      "truth_id": "T00353",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00054",
+      "truth_id": "T00354",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00055",
+      "truth_id": "T00355",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00056",
+      "truth_id": "T00356",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00057",
+      "truth_id": "T00357",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00058",
+      "truth_id": "T00358",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00059",
+      "truth_id": "T00359",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00060",
+      "truth_id": "T00360",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00061",
+      "truth_id": "T00361",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00062",
+      "truth_id": "T00362",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00063",
+      "truth_id": "T00363",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00064",
+      "truth_id": "T00364",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00065",
+      "truth_id": "T00365",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00066",
+      "truth_id": "T00366",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00067",
+      "truth_id": "T00367",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00068",
+      "truth_id": "T00368",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00069",
+      "truth_id": "T00369",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00070",
+      "truth_id": "T00370",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00071",
+      "truth_id": "T00371",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00072",
+      "truth_id": "T00372",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00073",
+      "truth_id": "T00373",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00074",
+      "truth_id": "T00374",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00075",
+      "truth_id": "T00375",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00076",
+      "truth_id": "T00376",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00077",
+      "truth_id": "T00377",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00078",
+      "truth_id": "T00378",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00079",
+      "truth_id": "T00379",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00080",
+      "truth_id": "T00380",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00081",
+      "truth_id": "T00381",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00082",
+      "truth_id": "T00382",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00083",
+      "truth_id": "T00383",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00084",
+      "truth_id": "T00384",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00085",
+      "truth_id": "T00385",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00086",
+      "truth_id": "T00386",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00087",
+      "truth_id": "T00387",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00088",
+      "truth_id": "T00388",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00089",
+      "truth_id": "T00389",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00090",
+      "truth_id": "T00390",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00091",
+      "truth_id": "T00391",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00092",
+      "truth_id": "T00392",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00093",
+      "truth_id": "T00393",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00094",
+      "truth_id": "T00394",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00095",
+      "truth_id": "T00395",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00096",
+      "truth_id": "T00396",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00097",
+      "truth_id": "T00397",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00098",
+      "truth_id": "T00398",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00099",
+      "truth_id": "T00399",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00100",
+      "truth_id": "T00400",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00101",
+      "truth_id": "T00401",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00102",
+      "truth_id": "T00402",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00103",
+      "truth_id": "T00403",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00104",
+      "truth_id": "T00404",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00105",
+      "truth_id": "T00405",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00106",
+      "truth_id": "T00406",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00107",
+      "truth_id": "T00407",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00108",
+      "truth_id": "T00408",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00109",
+      "truth_id": "T00409",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00110",
+      "truth_id": "T00410",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00111",
+      "truth_id": "T00411",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00112",
+      "truth_id": "T00412",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00113",
+      "truth_id": "T00413",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00114",
+      "truth_id": "T00414",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00115",
+      "truth_id": "T00415",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00116",
+      "truth_id": "T00416",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00117",
+      "truth_id": "T00417",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00118",
+      "truth_id": "T00418",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00119",
+      "truth_id": "T00419",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00120",
+      "truth_id": "T00420",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00121",
+      "truth_id": "T00421",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00122",
+      "truth_id": "T00422",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00123",
+      "truth_id": "T00423",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00124",
+      "truth_id": "T00424",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00125",
+      "truth_id": "T00425",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00126",
+      "truth_id": "T00426",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00127",
+      "truth_id": "T00427",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00128",
+      "truth_id": "T00428",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00129",
+      "truth_id": "T00429",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00130",
+      "truth_id": "T00430",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00131",
+      "truth_id": "T00431",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00132",
+      "truth_id": "T00432",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00133",
+      "truth_id": "T00433",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00134",
+      "truth_id": "T00434",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00135",
+      "truth_id": "T00435",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00136",
+      "truth_id": "T00436",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00137",
+      "truth_id": "T00437",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00138",
+      "truth_id": "T00438",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00139",
+      "truth_id": "T00439",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00140",
+      "truth_id": "T00440",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00141",
+      "truth_id": "T00441",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00142",
+      "truth_id": "T00442",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00143",
+      "truth_id": "T00443",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00144",
+      "truth_id": "T00444",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00145",
+      "truth_id": "T00445",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00146",
+      "truth_id": "T00446",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00147",
+      "truth_id": "T00447",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00148",
+      "truth_id": "T00448",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00149",
+      "truth_id": "T00449",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00150",
+      "truth_id": "T00450",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00151",
+      "truth_id": "T00451",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00152",
+      "truth_id": "T00452",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00153",
+      "truth_id": "T00453",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00154",
+      "truth_id": "T00454",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00155",
+      "truth_id": "T00455",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00156",
+      "truth_id": "T00456",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00157",
+      "truth_id": "T00457",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00158",
+      "truth_id": "T00458",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00159",
+      "truth_id": "T00459",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00160",
+      "truth_id": "T00460",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00161",
+      "truth_id": "T00461",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00162",
+      "truth_id": "T00462",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00163",
+      "truth_id": "T00463",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00164",
+      "truth_id": "T00464",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00165",
+      "truth_id": "T00465",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00166",
+      "truth_id": "T00466",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00167",
+      "truth_id": "T00467",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00168",
+      "truth_id": "T00468",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00169",
+      "truth_id": "T00469",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00170",
+      "truth_id": "T00470",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00171",
+      "truth_id": "T00471",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00172",
+      "truth_id": "T00472",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00173",
+      "truth_id": "T00473",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00174",
+      "truth_id": "T00474",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00175",
+      "truth_id": "T00475",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00176",
+      "truth_id": "T00476",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00177",
+      "truth_id": "T00477",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00178",
+      "truth_id": "T00478",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00179",
+      "truth_id": "T00479",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00180",
+      "truth_id": "T00480",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00181",
+      "truth_id": "T00481",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00182",
+      "truth_id": "T00482",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00183",
+      "truth_id": "T00483",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00184",
+      "truth_id": "T00484",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00185",
+      "truth_id": "T00485",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00186",
+      "truth_id": "T00486",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00187",
+      "truth_id": "T00487",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00188",
+      "truth_id": "T00488",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00189",
+      "truth_id": "T00489",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00190",
+      "truth_id": "T00490",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00191",
+      "truth_id": "T00491",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00192",
+      "truth_id": "T00492",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00193",
+      "truth_id": "T00493",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00194",
+      "truth_id": "T00494",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00195",
+      "truth_id": "T00495",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00196",
+      "truth_id": "T00496",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00197",
+      "truth_id": "T00497",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00198",
+      "truth_id": "T00498",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00199",
+      "truth_id": "T00499",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00200",
+      "truth_id": "T00500",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00201",
+      "truth_id": "T00501",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00202",
+      "truth_id": "T00502",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00203",
+      "truth_id": "T00503",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00204",
+      "truth_id": "T00504",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00205",
+      "truth_id": "T00505",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00206",
+      "truth_id": "T00506",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00207",
+      "truth_id": "T00507",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00208",
+      "truth_id": "T00508",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00209",
+      "truth_id": "T00509",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00210",
+      "truth_id": "T00510",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00211",
+      "truth_id": "T00511",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00212",
+      "truth_id": "T00512",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00213",
+      "truth_id": "T00513",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00214",
+      "truth_id": "T00514",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00215",
+      "truth_id": "T00515",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00216",
+      "truth_id": "T00516",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00217",
+      "truth_id": "T00517",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00218",
+      "truth_id": "T00518",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00219",
+      "truth_id": "T00519",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00220",
+      "truth_id": "T00520",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00221",
+      "truth_id": "T00521",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00222",
+      "truth_id": "T00522",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00223",
+      "truth_id": "T00523",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00224",
+      "truth_id": "T00524",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00225",
+      "truth_id": "T00525",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00226",
+      "truth_id": "T00526",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00227",
+      "truth_id": "T00527",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00228",
+      "truth_id": "T00528",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00229",
+      "truth_id": "T00529",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00230",
+      "truth_id": "T00530",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00231",
+      "truth_id": "T00531",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00232",
+      "truth_id": "T00532",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00233",
+      "truth_id": "T00533",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00234",
+      "truth_id": "T00534",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00235",
+      "truth_id": "T00535",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00236",
+      "truth_id": "T00536",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00237",
+      "truth_id": "T00537",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00238",
+      "truth_id": "T00538",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00239",
+      "truth_id": "T00539",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00240",
+      "truth_id": "T00540",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00241",
+      "truth_id": "T00541",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00242",
+      "truth_id": "T00542",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00243",
+      "truth_id": "T00543",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00244",
+      "truth_id": "T00544",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00245",
+      "truth_id": "T00545",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00246",
+      "truth_id": "T00546",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00247",
+      "truth_id": "T00547",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00248",
+      "truth_id": "T00548",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00249",
+      "truth_id": "T00549",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00250",
+      "truth_id": "T00550",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00251",
+      "truth_id": "T00551",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00252",
+      "truth_id": "T00552",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00253",
+      "truth_id": "T00553",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00254",
+      "truth_id": "T00554",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00255",
+      "truth_id": "T00555",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00256",
+      "truth_id": "T00556",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00257",
+      "truth_id": "T00557",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00258",
+      "truth_id": "T00558",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00259",
+      "truth_id": "T00559",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00260",
+      "truth_id": "T00560",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00261",
+      "truth_id": "T00561",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00262",
+      "truth_id": "T00562",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00263",
+      "truth_id": "T00563",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00264",
+      "truth_id": "T00564",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00265",
+      "truth_id": "T00565",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00266",
+      "truth_id": "T00566",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00267",
+      "truth_id": "T00567",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00268",
+      "truth_id": "T00568",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00269",
+      "truth_id": "T00569",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00270",
+      "truth_id": "T00570",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00271",
+      "truth_id": "T00571",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00272",
+      "truth_id": "T00572",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00273",
+      "truth_id": "T00573",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00274",
+      "truth_id": "T00574",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00275",
+      "truth_id": "T00575",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00276",
+      "truth_id": "T00576",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00277",
+      "truth_id": "T00577",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00278",
+      "truth_id": "T00578",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00279",
+      "truth_id": "T00579",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00280",
+      "truth_id": "T00580",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00281",
+      "truth_id": "T00581",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00282",
+      "truth_id": "T00582",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00283",
+      "truth_id": "T00583",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00284",
+      "truth_id": "T00584",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00285",
+      "truth_id": "T00585",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00286",
+      "truth_id": "T00586",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00287",
+      "truth_id": "T00587",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00288",
+      "truth_id": "T00588",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00289",
+      "truth_id": "T00589",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00290",
+      "truth_id": "T00590",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00291",
+      "truth_id": "T00591",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00292",
+      "truth_id": "T00592",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00293",
+      "truth_id": "T00593",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00294",
+      "truth_id": "T00594",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00295",
+      "truth_id": "T00595",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00296",
+      "truth_id": "T00596",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00297",
+      "truth_id": "T00597",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00298",
+      "truth_id": "T00598",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B00299",
+      "truth_id": "T00599",
+      "scenario": "clean",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B90000",
+      "truth_id": "T00005",
+      "scenario": "cross_partner_near_match",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B90001",
+      "truth_id": "T00010",
+      "scenario": "cross_partner_near_match",
+      "feed": "partner_b_day2.csv"
+    },
+    {
+      "partner_member_id": "B99999",
+      "truth_id": "T00040",
+      "scenario": "deletion_fixture",
+      "feed": "partner_b_day2.csv"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+# PARTNER_B mapping — case study prototype A2.
+# Source columns match prototype/fixtures/partner_b_day1.csv.
+
+partner_id: PARTNER_B
+format: csv
+
+# PARTNER_B uses ISO date format. The alternate handles the seeded
+# format_error_short_year scenario from A1 (e.g., "85-04-12").
+date_format: "%Y-%m-%d"
+date_format_alternates:
+  - "%y-%m-%d"
+
+# PARTNER_B sends only the last 4 digits of SSN.
+ssn_field: last4
+
+mapping:
+  partner_member_id: ext_id
+  first_name: given_name
+  last_name: family_name
+  dob: date_of_birth
+  ssn_last4: ssn_last4
+  street: address_line1
+  city: address_city
+  state: address_state
+  zip: address_zip
+  phone: phone_number
+  email: email_address
+
+field_tiers:
+  partner_member_id: required
+  first_name: required
+  last_name: required
+  dob: required
+  ssn_last4: verification
+  street: verification
+  city: verification
+  state: verification
+  zip: verification
+  phone: enrichment
+  email: enrichment

@@ -150,3 +150,62 @@ dev-down: ## Stop and remove development containers
 .PHONY: dev-db-only
 dev-db-only: ## Bring up postgres + pgbouncer with host port 5432 exposed (for host-side pytest)
 	docker compose -f docker-compose.yml -f docker-compose.dev-db.yml up -d postgres pgbouncer
+
+# ---------------------------------------------------------------------------
+# prototype-test — run the prototype/ test suite (overrides production
+# coverage gate; prototype/ runs under the relaxed harness profile)
+# ---------------------------------------------------------------------------
+.PHONY: prototype-test
+prototype-test: ## Run prototype/ tests (relaxed harness; coverage gate skipped)
+	poetry run pytest prototype/tests/ -o addopts="--tb=short"
+
+# ---------------------------------------------------------------------------
+# prototype-pg-up — spawn a one-shot Postgres for the prototype demo
+#
+# Lightweight alternative to `make dev-db-only`: stock postgres:16-alpine
+# on host port 5440 with username/password = postgres, no secrets file
+# provisioning required. Removed automatically on stop (--rm).
+# ---------------------------------------------------------------------------
+.PHONY: prototype-pg-up
+prototype-pg-up: ## Spawn one-shot Postgres for the prototype demo (port 5440)
+	@docker rm -f lore-prototype-pg 2>/dev/null || true
+	docker run -d --rm --name lore-prototype-pg -p 5440:5432 \
+		-e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=lore_eligibility \
+		postgres:16-alpine
+	@echo "Waiting for Postgres to be ready on 127.0.0.1:5440..."
+	@for i in $$(seq 1 30); do \
+		if docker exec lore-prototype-pg pg_isready -U postgres >/dev/null 2>&1; then \
+			echo "Postgres ready"; exit 0; \
+		fi; sleep 1; \
+	done; \
+	echo "Postgres did not become ready in 30s" >&2; exit 1
+
+# ---------------------------------------------------------------------------
+# prototype-pg-down — stop the prototype demo Postgres container
+# ---------------------------------------------------------------------------
+.PHONY: prototype-pg-down
+prototype-pg-down: ## Stop the prototype demo Postgres container
+	-docker stop lore-prototype-pg 2>/dev/null
+
+# ---------------------------------------------------------------------------
+# prototype-demo — run the full panel demo
+# Requires `make prototype-pg-up` first (or any Postgres reachable via
+# the DATABASE_URL env var).
+# ---------------------------------------------------------------------------
+.PHONY: prototype-demo
+prototype-demo: ## Run the full panel demo (requires `make prototype-pg-up` first)
+	poetry run python -m prototype demo
+
+# ---------------------------------------------------------------------------
+# prototype-h2 — run the H2 Splink snippet (panel hands-on artifact)
+# ---------------------------------------------------------------------------
+.PHONY: prototype-h2
+prototype-h2: ## Run the H2 Splink near-duplicate detection snippet
+	poetry run python -m prototype.snippets.h2_splink_demo
+
+# ---------------------------------------------------------------------------
+# prototype-audit-chain — inspect or validate the audit chain JSONL
+# ---------------------------------------------------------------------------
+.PHONY: prototype-audit-chain
+prototype-audit-chain: ## Inspect or validate the audit chain (usage: make prototype-audit-chain ARGS='validate')
+	poetry run python -m prototype audit-chain $(ARGS)

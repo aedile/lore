@@ -59,3 +59,14 @@ pgbouncer/userlist.txt
 
 # Case-study scratch directory (problem brief, careers research, etc.)
 IGNORE/
+
+# Prototype runtime data — local DBs, generated feeds, caches.
+# The prototype folder itself IS tracked; only its runtime state is ignored.
+prototype/data/
+prototype/output/
+prototype/.cache/
+prototype/*.duckdb
+prototype/*.duckdb.wal
+prototype/*.db
+prototype/*.sqlite
+prototype/*.sqlite3
