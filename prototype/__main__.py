@@ -34,7 +34,9 @@ DEFAULT_OUTPUT = REPO_ROOT / "prototype" / "data"
 # Default DSN matches the `prototype-pg-up` Makefile target — a stock
 # postgres:16-alpine container on port 5440 with user/password = postgres.
 # Override via DATABASE_URL or --dsn for any other environment.
-_DEFAULT_DSN = "postgresql://postgres:postgres@127.0.0.1:5440/lore_eligibility"
+_DEFAULT_DSN = (
+    "postgresql://postgres:postgres@127.0.0.1:5440/lore_eligibility"  # pragma: allowlist secret
+)
 
 
 def _print_section(title: str) -> None:
@@ -68,9 +70,7 @@ def _cli() -> int:
         default=None,
         help="Filter to events whose event_class equals this value.",
     )
-    chain_p.add_argument(
-        "--last", type=int, default=20, help="Show only the last N events."
-    )
+    chain_p.add_argument("--last", type=int, default=20, help="Show only the last N events.")
 
     args = parser.parse_args()
     if args.cmd == "audit-chain":
