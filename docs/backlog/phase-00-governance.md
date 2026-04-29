@@ -7,6 +7,8 @@
 | **Owner** | PM (this Claude session) |
 | **Classification** | Lightweight (governance-only, per CLAUDE.md Rule 30) |
 
+> **Format note.** This file uses the harness T-task format (T0.1 through T0.10) and predates the `Pn-EPIC-NNN` story format used in Phase 0 through Phase 4. Phase 00 is a development-substrate artifact (governance and harness only) and is intentionally tracked separately from the production backlog. The format difference is not drift; it reflects a different artifact class. The production backlog format is defined in `README.md` and applies to Phase 0 onward.
+
 ---
 
 ## Goal

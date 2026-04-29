@@ -31,10 +31,9 @@ def _reset_structlog() -> None:
 @pytest.mark.unit
 def test_configure_logging_runs_in_json_mode() -> None:
     """JSON mode configures without raising and produces a usable logger."""
-    # NOTE: structlog binds sys.stderr at configure time, so configure
-    # MUST happen inside the redirect_stderr context for the buffer to
-    # receive output. (structlog 25.x captures the stream reference at
-    # config time; earlier versions resolved sys.stderr lazily.)
+    # configure_logging captures sys.stderr at call time inside the
+    # PrintLoggerFactory, so we must redirect stderr BEFORE configuring
+    # in order to capture the emitted output deterministically.
     buffer = io.StringIO()
     with redirect_stderr(buffer):
         configure_logging(level=logging.INFO, json_format=True)

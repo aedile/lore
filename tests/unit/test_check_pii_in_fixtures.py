@@ -60,18 +60,31 @@ def test_scan_line_finds_multiple_pii_in_one_line() -> None:
 
 @pytest.mark.unit
 def test_pii_allowed_comment_suppresses_findings() -> None:
-    """A line with the opt-out comment is treated as clean."""
-    line = "ssn,123-45-6789,active  # pii-allowed: faker-generated"
-    findings = gate.scan_line(line)
-    assert findings == []
+    """A line with the opt-out comment is treated as clean.
+
+    Sanity-check by removing the comment and confirming the *same* line
+    body would otherwise have been flagged — guards against the test
+    passing because of a regex bug rather than the suppression.
+    """
+    body = "ssn,123-45-6789,active"
+    suppressed = gate.scan_line(f"{body}  # pii-allowed: faker-generated")
+    assert suppressed == []
+    # Without the marker the SSN must be flagged.
+    unsuppressed = gate.scan_line(body)
+    assert any(kind == "SSN" for kind, _ in unsuppressed)
 
 
 @pytest.mark.unit
 def test_pii_allowed_comment_is_case_insensitive() -> None:
     """The opt-out marker matches regardless of case."""
-    line = "ssn,123-45-6789  # PII-Allowed: synthetic data"
-    findings = gate.scan_line(line)
-    assert findings == []
+    # All four casings must suppress findings; the unsuppressed body
+    # would otherwise produce an SSN finding, so this isn't vacuous.
+    body = "ssn,123-45-6789"
+    for marker in ("pii-allowed", "PII-ALLOWED", "Pii-Allowed", "PII-Allowed"):
+        line = f"{body}  # {marker}: synthetic data"
+        assert gate.scan_line(line) == [], f"casing {marker!r} did not suppress"
+    # Confirm the body without the marker IS flagged.
+    assert any(kind == "SSN" for kind, _ in gate.scan_line(body))
 
 
 # ---------------------------------------------------------------------------
@@ -96,9 +109,11 @@ def test_exempt_email_domains_are_not_flagged(email: str) -> None:
     """Conventional test/fictional domains do not produce findings."""
     line = f"contact: {email}"
     findings = gate.scan_line(line)
-    assert all(kind != "email" for kind, _ in findings), (
-        f"email {email} was flagged but should be exempt"
-    )
+    email_findings = [(kind, sample) for kind, sample in findings if kind == "email"]
+    assert email_findings == [], f"email {email} was flagged but should be exempt: {email_findings}"
+    # The full email string itself must not appear in any finding sample —
+    # protects against a partial match (e.g. flagging only the local-part).
+    assert all(email not in sample for _, sample in findings)
 
 
 @pytest.mark.unit
@@ -117,6 +132,12 @@ def test_realistic_email_domains_are_flagged(email: str) -> None:
     findings = gate.scan_line(line)
     kinds = {kind for kind, _ in findings}
     assert "email" in kinds
+    # The verbatim email address must appear in the captured sample so a
+    # reviewer can see what tripped the gate, not just that something did.
+    email_samples = [sample for kind, sample in findings if kind == "email"]
+    assert any(email in sample for sample in email_samples), (
+        f"email {email!r} not present in any captured sample {email_samples}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -148,6 +169,11 @@ def test_scan_file_returns_empty_on_clean_input(tmp_path: Path) -> None:
     fixture.write_text("id,name,score\n1,alpha,0.5\n2,beta,0.7\n", encoding="utf-8")
     findings = gate.scan_file(fixture)
     assert findings == []
+    # Adding a single PII row to the same file MUST flip the result —
+    # this anchors the empty case against an active counterexample.
+    fixture.write_text("id,name,score,ssn\n1,alpha,0.5,123-45-6789\n", encoding="utf-8")
+    dirty = gate.scan_file(fixture)
+    assert dirty, "expected scan_file to find PII once SSN row was added"
 
 
 # ---------------------------------------------------------------------------
@@ -159,11 +185,16 @@ def test_scan_file_returns_empty_on_clean_input(tmp_path: Path) -> None:
 def test_main_returns_zero_on_clean_tree(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """main() returns 0 when no PII is found."""
+    """main() returns 0 and produces no findings output when nothing is dirty."""
     (tmp_path / "fixtures").mkdir()
     (tmp_path / "fixtures" / "f.csv").write_text("id,score\n1,0.5\n", encoding="utf-8")
     code = gate.main([str(tmp_path / "fixtures")])
     assert code == 0
+    captured = capsys.readouterr()
+    # On a clean tree main() must NOT print findings — any "pii-allowed"
+    # advice or sample digits would indicate a false positive in the gate.
+    assert "pii-allowed" not in captured.out
+    assert "123-45-6789" not in captured.out
 
 
 @pytest.mark.unit
