@@ -252,13 +252,21 @@ def configure_logging(
     )
 
 
-def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
+def get_logger(name: str | None = None) -> structlog.types.FilteringBoundLogger:
     """Return a structlog logger bound to ``name``.
+
+    The return type is :class:`structlog.types.FilteringBoundLogger` — a
+    structural protocol satisfied by the concrete class produced by
+    :func:`structlog.make_filtering_bound_logger`, which we install as
+    the ``wrapper_class`` in :func:`configure_logging`. This matches
+    runtime reality (the concrete class is
+    ``structlog._native.BoundLoggerFilteringAtInfo``) rather than
+    asserting a false relationship to ``structlog.stdlib.BoundLogger``.
 
     Args:
         name: Logger name (typically ``__name__``).
 
     Returns:
-        A structlog BoundLogger configured with PII redaction.
+        A structlog FilteringBoundLogger configured with PII redaction.
     """
-    return cast(structlog.stdlib.BoundLogger, structlog.get_logger(name))
+    return cast(structlog.types.FilteringBoundLogger, structlog.get_logger(name))
