@@ -32,7 +32,7 @@ import re
 import sys
 from collections.abc import Mapping, MutableMapping
 from re import Pattern
-from typing import Any
+from typing import Any, cast
 
 import structlog
 
@@ -111,16 +111,12 @@ PII_PATTERNS: tuple[tuple[Pattern[str], str], ...] = (
     # Phone (US-shaped): 10 digits with optional country code, parens,
     # spaces, dots, hyphens.
     (
-        re.compile(
-            r"\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b"
-        ),
+        re.compile(r"\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b"),
         "***PHONE***",
     ),
     # Email
     (
-        re.compile(
-            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+\b"
-        ),
+        re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+\b"),
         "***EMAIL***",
     ),
     # Date of birth (YYYY-MM-DD or MM/DD/YYYY) — defensive only; structured
@@ -165,11 +161,7 @@ def redact_pii_keys(
         value = event_dict[key]
         if isinstance(value, Mapping):
             event_dict[key] = {
-                inner_key: (
-                    REDACTED_VALUE
-                    if inner_key.lower() in PII_KEYS
-                    else inner_value
-                )
+                inner_key: (REDACTED_VALUE if inner_key.lower() in PII_KEYS else inner_value)
                 for inner_key, inner_value in value.items()
             }
     return event_dict
@@ -260,13 +252,21 @@ def configure_logging(
     )
 
 
-def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
+def get_logger(name: str | None = None) -> structlog.types.FilteringBoundLogger:
     """Return a structlog logger bound to ``name``.
+
+    The return type is :class:`structlog.types.FilteringBoundLogger` — a
+    structural protocol satisfied by the concrete class produced by
+    :func:`structlog.make_filtering_bound_logger`, which we install as
+    the ``wrapper_class`` in :func:`configure_logging`. This matches
+    runtime reality (the concrete class is
+    ``structlog._native.BoundLoggerFilteringAtInfo``) rather than
+    asserting a false relationship to ``structlog.stdlib.BoundLogger``.
 
     Args:
         name: Logger name (typically ``__name__``).
 
     Returns:
-        A structlog BoundLogger configured with PII redaction.
+        A structlog FilteringBoundLogger configured with PII redaction.
     """
-    return structlog.get_logger(name)
+    return cast(structlog.types.FilteringBoundLogger, structlog.get_logger(name))

@@ -36,17 +36,11 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 
 SSN_RE = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
-PHONE_RE = re.compile(
-    r"\b(?:\+?1[-.\s])?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b"
-)
-EMAIL_RE = re.compile(
-    r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+\b"
-)
+PHONE_RE = re.compile(r"\b(?:\+?1[-.\s])?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}\b")
+EMAIL_RE = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+\b")
 # DOB: ISO date with year 1900-2030 (catches plausible birth dates while
 # letting future-dated test timestamps through unflagged).
-DOB_RE = re.compile(
-    r"\b(?:19|20)\d{2}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])\b"
-)
+DOB_RE = re.compile(r"\b(?:19|20)\d{2}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])\b")
 
 #: Email domains that are conventionally fictional and therefore exempt.
 EXEMPT_EMAIL_DOMAINS: frozenset[str] = frozenset(
@@ -177,10 +171,7 @@ def main(argv: list[str] | None = None) -> int:
     for path, lineno, kind, sample in all_findings:
         print(f"  {path}:{lineno} — {kind}: {sample}")
     print()
-    print(
-        "If a line is intentionally fictional / Faker-generated test data, "
-        "annotate it with:"
-    )
+    print("If a line is intentionally fictional / Faker-generated test data, annotate it with:")
     print("    # pii-allowed: <one-sentence justification>")
     print()
     print(

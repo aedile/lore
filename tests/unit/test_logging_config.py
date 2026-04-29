@@ -31,12 +31,14 @@ def _reset_structlog() -> None:
 @pytest.mark.unit
 def test_configure_logging_runs_in_json_mode() -> None:
     """JSON mode configures without raising and produces a usable logger."""
-    configure_logging(level=logging.INFO, json_format=True)
-    logger = get_logger("test")
-    assert logger is not None
-    # Smoke-test that emitting does not raise.
+    # configure_logging captures sys.stderr at call time inside the
+    # PrintLoggerFactory, so we must redirect stderr BEFORE configuring
+    # in order to capture the emitted output deterministically.
     buffer = io.StringIO()
     with redirect_stderr(buffer):
+        configure_logging(level=logging.INFO, json_format=True)
+        logger = get_logger("test")
+        assert logger is not None
         logger.info("benign message", trace_id="t-1")
     assert "benign message" in buffer.getvalue()
 
@@ -44,10 +46,10 @@ def test_configure_logging_runs_in_json_mode() -> None:
 @pytest.mark.unit
 def test_configure_logging_runs_in_console_mode() -> None:
     """Console mode also configures and produces output."""
-    configure_logging(level=logging.INFO, json_format=False)
-    logger = get_logger("test")
     buffer = io.StringIO()
     with redirect_stderr(buffer):
+        configure_logging(level=logging.INFO, json_format=False)
+        logger = get_logger("test")
         logger.info("benign console message")
     output = buffer.getvalue()
     assert "benign console message" in output
@@ -57,10 +59,10 @@ def test_configure_logging_runs_in_console_mode() -> None:
 @pytest.mark.unit
 def test_end_to_end_pii_redaction_in_json_output() -> None:
     """A real log call with PII produces JSON in which the PII is redacted."""
-    configure_logging(level=logging.INFO, json_format=True)
-    logger = get_logger("test")
     buffer = io.StringIO()
     with redirect_stderr(buffer):
+        configure_logging(level=logging.INFO, json_format=True)
+        logger = get_logger("test")
         logger.info(
             "user lookup",
             ssn="123-45-6789",
