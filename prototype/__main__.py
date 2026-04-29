@@ -180,6 +180,9 @@ def _cli() -> int:
     _print_section("BR-402 — Brute-force progression (lockout after 3 failures)")
     _run_bruteforce_demo(conn, args.fixtures)
 
+    _print_section("BR-305 — Profile drift detection")
+    _run_profile_drift_demo(args.fixtures)
+
     _print_section("PRD #6 — Redaction scanner")
     if not result.redaction_matches:
         print("  PASS — zero PII pattern matches across the audit chain.")
@@ -455,6 +458,67 @@ def _run_bruteforce_demo(conn: object, fixtures_dir: Path) -> None:
     print(
         "  Lockout is scoped per (name_token, dob_token); attackers cannot DoS "
         "the entire user base by probing one identity."
+    )
+
+
+def _run_profile_drift_demo(fixtures_dir: Path) -> None:
+    """Demonstrate BR-305 profile drift: synthesise a day-2 variant of
+    PARTNER_A where the ``phone`` null-rate jumps from baseline to ~70%,
+    run dq.run() with the prior profile, and print the drifted fields.
+    """
+    from dataclasses import replace
+
+    from prototype.dq import run as run_dq
+    from prototype.mapping_engine import load_mapping, map_feed
+
+    mapping = load_mapping(fixtures_dir.parent / "mappings" / "partner_a.yaml")
+
+    # Baseline profile from the day-1 PARTNER_A feed.
+    day1_rows = list(read_csv(fixtures_dir / "partner_a_day1.csv"))
+    baseline_records = list(map_feed(day1_rows, mapping))
+    columns = list(day1_rows[0].keys())
+    baseline_result = run_dq(baseline_records, mapping=mapping, feed_columns=columns)
+    baseline = baseline_result.profile
+
+    # Drifted feed: copy the baseline records and null out 'phone' on 70%
+    # of them. (Simulates a partner who silently dropped the phone field
+    # from their export.)
+    drifted_records = []
+    for i, rec in enumerate(baseline_records):
+        if i % 10 < 7:
+            new_canonical = dict(rec.canonical)
+            new_canonical["phone"] = ""
+            drifted_records.append(replace(rec, canonical=new_canonical))
+        else:
+            drifted_records.append(rec)
+
+    drift_result = run_dq(
+        drifted_records,
+        mapping=mapping,
+        feed_columns=columns,
+        prior_profile=baseline,
+    )
+
+    # Print field-level null-rate deltas for visibility.
+    print("  Compared today's PARTNER_A feed to yesterday's profile baseline.")
+    print()
+    print(f"  {'field':20s}  baseline_null  today_null  drift")
+    print(f"  {'-' * 20}  {'-' * 13}  {'-' * 10}  {'-' * 5}")
+    for field_name in ("first_name", "last_name", "phone", "email", "ssn_last4"):
+        b_rate = baseline.fields.get(field_name)
+        d_rate = drift_result.profile.fields.get(field_name)
+        if b_rate is None or d_rate is None:
+            continue
+        flag = "**" if field_name in drift_result.profile_drift_fields else ""
+        print(
+            f"  {field_name:20s}  {b_rate.null_rate:13.3f}  "
+            f"{d_rate.null_rate:10.3f}  {flag}"
+        )
+    print()
+    print(f"  Drifted fields flagged: {drift_result.profile_drift_fields or '(none)'}")
+    print(
+        "  In production this fires a PROFILE_DRIFT event that pages the "
+        "data-engineering on-call (BR-305)."
     )
 
 
