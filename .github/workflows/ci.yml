@@ -83,8 +83,12 @@ jobs:
           # is the null-SHA. Fall back to merge-base with main so git diff has both ends.
           if [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
             git fetch origin main:refs/remotes/origin/main 2>/dev/null || true
-            BASE=$(git merge-base origin/main "$HEAD")
-            echo "First push of branch detected; using merge-base with main as BASE: $BASE"
+            BASE=$(git merge-base origin/main "$HEAD" 2>/dev/null || true)
+            if [ -z "$BASE" ]; then
+              echo "No merge-base with main; falling back to empty-tree SHA (diffs against everything)."
+              BASE=$(git hash-object -t tree /dev/null)
+            fi
+            echo "First push of branch detected; using BASE: $BASE"
           fi
 
           CHANGED=$(git diff --name-only "$BASE" "$HEAD")
