@@ -6,6 +6,12 @@ interview. This folder is **quarantined from the production-shaped harness**
 ~22-hour build budget on synthetic data described in
 `../docs/PROTOTYPE_PRD.md`.
 
+## Documentation
+
+- **`../docs/PROTOTYPE_PRD.md`** — build spec (what gets built, acceptance criteria).
+- **`docs/walkthrough.md`** (W1) — panel-facing prose narrative: problem framing, strategic vision, identity-resolution rationale, lens-specific framing for each interviewer.
+- **`docs/notebook.md`** — runtime notebook: sample inputs, captured outputs, stats, audit-chain entries. The "show me what it actually does" doc.
+
 ## Build artifacts
 
 Tracked against the PRD's eight runnable artifacts plus the two hands-on
