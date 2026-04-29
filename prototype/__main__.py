@@ -44,8 +44,8 @@ def _cli() -> int:
     demo_p.add_argument("--dsn", default=os.environ.get("DATABASE_URL", _DEFAULT_DSN))
     demo_p.add_argument("--fixtures", type=Path, default=DEFAULT_FIXTURES)
     demo_p.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
-    demo_p.add_argument("--match-high", type=float, default=5.0)
-    demo_p.add_argument("--match-review", type=float, default=1.0)
+    demo_p.add_argument("--match-high", type=float, default=20.0)
+    demo_p.add_argument("--match-review", type=float, default=-18.0)
 
     args = parser.parse_args()
     if args.cmd != "demo":
@@ -80,6 +80,9 @@ def _cli() -> int:
     print(f"  canonical_inserted = {result.day1.canonical_inserted}")
     print(f"  enrollments        = {result.day1.enrollments_inserted}")
     print(f"  match_decisions    = {result.day1.match_decisions_inserted}")
+    print(
+        f"  review_queue       = {result.day1.review_queue_inserted}  (Tier 3 cases awaiting human review)"
+    )
 
     _print_section("PRD #3 — Tier histogram (day 1)")
     for tier in (TIER_1, TIER_2, TIER_3, TIER_4):
@@ -88,6 +91,51 @@ def _cli() -> int:
     _print_section("PRD #3 — Tier histogram (day 2)")
     for tier in (TIER_1, TIER_2, TIER_3, TIER_4):
         print(f"  {tier:30s} {result.day2.tier_histogram.get(tier, 0):5d}")
+
+    _print_section("PRD #3 — Review queue (Tier 3 cases for human review)")
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT rq.candidate_record_ref, rq.score, md.score_breakdown
+          FROM review_queue rq
+          JOIN match_decision md ON md.decision_id = rq.decision_id
+         ORDER BY rq.score DESC
+        """
+    )
+    rows = cur.fetchall()
+    if not rows:
+        print("  (empty)")
+    print(f"  {len(rows)} record(s) awaiting human review.")
+    print(
+        "  Each row's score_breakdown carries Splink's per-comparison Bayes "
+        "factors (bf_*)\n  so the reviewer sees exactly which fields "
+        "supported or weakened the decision."
+    )
+    print()
+    for ref, score, breakdown in rows[:6]:  # cap output for readability
+        print(f"  {ref:30s} weight={score:8.3f}")
+        if breakdown:
+            import json as _json
+
+            try:
+                bd = _json.loads(breakdown) if isinstance(breakdown, str) else breakdown
+            except _json.JSONDecodeError:
+                bd = {}
+            top_bfs = sorted(
+                (
+                    (k, v)
+                    for k, v in bd.items()
+                    if k.startswith("bf_") and not k.startswith("bf_tf_")
+                ),
+                key=lambda kv: -float(kv[1]) if isinstance(kv[1], int | float) else 0,
+            )[:5]
+            for k, v in top_bfs:
+                if isinstance(v, int | float):
+                    print(f"      {k:25s} = {v:11.4f}")
+                else:
+                    print(f"      {k:25s} = {v}")
+    if len(rows) > 6:
+        print(f"  ... + {len(rows) - 6} more queued for review")
 
     _print_section("PRD #7 — Deletion + day-2 SUPPRESSED_DELETED")
     print(f"  Deleted member_id    = {result.deletion_target_member_id}")

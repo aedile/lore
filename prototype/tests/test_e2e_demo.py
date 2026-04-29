@@ -20,7 +20,7 @@ from fastapi.testclient import TestClient
 from prototype.audit import AuditChain, RedactionScanner
 from prototype.canonical import CanonicalState
 from prototype.demo import run_full_demo
-from prototype.identity import TIER_2, TIER_4, TierThresholds
+from prototype.identity import TIER_2, TIER_4
 from prototype.tokenization import tokenize_dob, tokenize_name
 from prototype.verification import (
     NOT_VERIFIED,
@@ -47,7 +47,6 @@ def test_e2e_demo_satisfies_prd_acceptance_criteria(postgresql, tmp_path: Path) 
         postgresql,
         fixtures_dir=FIXTURES,
         output_dir=tmp_path,
-        thresholds=TierThresholds(high=5.0, review=1.0),
     )
 
     # ----- PRD #1: Day-1 pipeline runs end-to-end without errors. -----
@@ -72,16 +71,31 @@ def test_e2e_demo_satisfies_prd_acceptance_criteria(postgresql, tmp_path: Path) 
     assert partner_a_day2.feed_quarantined is False
 
     # ----- PRD #3: Splink demo produces match weights for Tier 2/3/4 cases. -----
+    from prototype.identity import TIER_3
+
     total_tier2 = result.day1.tier_histogram.get(TIER_2, 0) + result.day2.tier_histogram.get(
         TIER_2, 0
+    )
+    total_tier3 = result.day1.tier_histogram.get(TIER_3, 0) + result.day2.tier_histogram.get(
+        TIER_3, 0
     )
     total_tier4 = result.day1.tier_histogram.get(TIER_4, 0) + result.day2.tier_histogram.get(
         TIER_4, 0
     )
     assert total_tier2 >= 1, (
-        f"At least one Tier 2 match expected; got histogram day1={result.day1.tier_histogram} day2={result.day2.tier_histogram}"
+        f"At least one Tier 2 match expected; got histogram "
+        f"day1={result.day1.tier_histogram} day2={result.day2.tier_histogram}"
+    )
+    assert total_tier3 >= 1, (
+        f"At least one Tier 3 review-queue case expected (engineered "
+        f"doppelganger fixtures); got histogram day1={result.day1.tier_histogram} "
+        f"day2={result.day2.tier_histogram}"
     )
     assert total_tier4 > total_tier2, "Tier 4 should dominate (most identities are unique)"
+    # review_queue rows persisted for Tier 3 outcomes (PRD A4 acceptance).
+    assert result.day1.review_queue_inserted >= 1, (
+        "Day-1 should populate review_queue for engineered Tier 3 doppelgangers."
+    )
 
     # ----- PRD #4: Verification API across internal-state combinations. -----
     members = [
@@ -169,7 +183,6 @@ def test_demo_chain_tampering_is_detected(postgresql, tmp_path: Path) -> None:  
         postgresql,
         fixtures_dir=FIXTURES,
         output_dir=tmp_path,
-        thresholds=TierThresholds(high=5.0, review=1.0),
     )
     path = result.audit_chain_path
     lines = path.read_text(encoding="utf-8").splitlines()

@@ -60,7 +60,7 @@ def main() -> int:
         f"across PARTNER_A + PARTNER_B day-1 feeds.\n"
     )
 
-    result = resolve(records, thresholds=TierThresholds(high=5.0, review=1.0))
+    result = resolve(records, thresholds=TierThresholds())
     print(
         f"Identity resolution: algorithm={result.algorithm_version} config={result.config_version}"
     )

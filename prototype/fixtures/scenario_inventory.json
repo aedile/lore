@@ -14,7 +14,8 @@
     "invalid_required_dob": "DOB field is empty \u2014 should fail BR-301 Required-tier validation.",
     "format_error_short_year": "DOB rendered with 2-digit year (e.g., '4/12/85') \u2014 exercises date-format normalization in the DQ engine (A3).",
     "cross_partner_near_match": "Same underlying truth identity present in both PARTNER_A and PARTNER_B feeds with deliberate mutations (name typo, address format diff). The Splink/DuckDB resolver (A4) must merge these via Tier 2 or queue them at Tier 3.",
-    "deletion_fixture": "Drives the BR-701..BR-704 demonstration: appears on PARTNER_A day 1, absent from PARTNER_A day 2 (deleted between snapshots), re-introduced on PARTNER_B day 2 with a name typo. The deletion ledger must suppress the re-introduction to SUPPRESSED_DELETED."
+    "deletion_fixture": "Drives the BR-701..BR-704 demonstration: appears on PARTNER_A day 1, absent from PARTNER_A day 2 (deleted between snapshots), re-introduced on PARTNER_B day 2 with a name typo. The deletion ledger must suppress the re-introduction to SUPPRESSED_DELETED.",
+    "tier3_ambiguity": "Real-world coincidence: a PARTNER_B record shares first_name and ssn_last4 with a PARTNER_A truth but has different DOB + different last_name. Splink's match weight lands between the review and auto-merge thresholds (BR-101 Tier 3) \u2014 the pair routes to the review queue with the per-comparison breakdown so a human can decide MERGE vs DISTINCT."
   },
   "records": [
     {
@@ -5433,6 +5434,20 @@
       "partner_member_id": "B90001",
       "truth_id": "T00010",
       "scenario": "cross_partner_near_match",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B80000",
+      "truth_id": "T3D000",
+      "scenario": "tier3_ambiguity",
+      "paired_with_truth_id": "T00050",
+      "feed": "partner_b_day1.csv"
+    },
+    {
+      "partner_member_id": "B80001",
+      "truth_id": "T3D001",
+      "scenario": "tier3_ambiguity",
+      "paired_with_truth_id": "T00055",
       "feed": "partner_b_day1.csv"
     },
     {

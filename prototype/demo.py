@@ -87,6 +87,7 @@ class Day1Result:
     canonical_inserted: int
     enrollments_inserted: int
     match_decisions_inserted: int
+    review_queue_inserted: int
     tier_histogram: dict[str, int]
 
 
@@ -97,6 +98,7 @@ class Day2Result:
     canonical_inserted: int
     enrollments_inserted: int
     match_decisions_inserted: int
+    review_queue_inserted: int
     member_history_inserted: int
     tier_histogram: dict[str, int]
 
@@ -206,6 +208,7 @@ def run_day1(
         canonical_inserted=persist_result.canonical_inserted,
         enrollments_inserted=persist_result.enrollments_inserted,
         match_decisions_inserted=persist_result.match_decisions_inserted,
+        review_queue_inserted=persist_result.review_queue_inserted,
         tier_histogram=_histogram(resolution),
     )
 
@@ -435,6 +438,7 @@ def run_day2(
         canonical_inserted=persist_result.canonical_inserted,
         enrollments_inserted=persist_result.enrollments_inserted,
         match_decisions_inserted=persist_result.match_decisions_inserted,
+        review_queue_inserted=persist_result.review_queue_inserted,
         member_history_inserted=history_count,
         tier_histogram=_histogram(resolution),
     )

@@ -97,6 +97,14 @@ SCENARIO_LEGEND: dict[str, str] = {
         "re-introduced on PARTNER_B day 2 with a name typo. The deletion "
         "ledger must suppress the re-introduction to SUPPRESSED_DELETED."
     ),
+    "tier3_ambiguity": (
+        "Real-world coincidence: a PARTNER_B record shares first_name and "
+        "ssn_last4 with a PARTNER_A truth but has different DOB + different "
+        "last_name. Splink's match weight lands between the review and "
+        "auto-merge thresholds (BR-101 Tier 3) — the pair routes to the "
+        "review queue with the per-comparison breakdown so a human can "
+        "decide MERGE vs DISTINCT."
+    ),
 }
 
 
@@ -249,6 +257,12 @@ class Scenarios:
     b_missing_lname_truth: TruthPerson
     b_invalid_dob_truth: TruthPerson
     b_short_year_truth: TruthPerson
+    # PARTNER_A truths whose first_name + ssn_last4 are reused by a separate
+    # PARTNER_B doppelganger to produce a Tier 3 review-queue case.
+    tier3_a_originals: list[TruthPerson]
+    # Synthetic PARTNER_B records that collide on first_name + ssn_last4 only
+    # — different real people, surfaced for human review.
+    tier3_b_doppelgangers: list[TruthPerson]
 
 
 def _assign_scenarios(
@@ -269,6 +283,11 @@ def _assign_scenarios(
     # shared; the projected rows differ.
     cross_match_truths = [partner_a_pool[5], partner_a_pool[10]]
 
+    # Tier-3 ambiguity originals — pick two PARTNER_A truths and synthesise
+    # PARTNER_B doppelgangers that share their first_name + ssn_last4 only.
+    tier3_a_originals = [partner_a_pool[50], partner_a_pool[55]]
+    tier3_b_doppelgangers = _build_tier3_doppelgangers(tier3_a_originals, rng)
+
     return Scenarios(
         partner_a_pool=partner_a_pool,
         partner_b_pool=partner_b_pool,
@@ -282,7 +301,56 @@ def _assign_scenarios(
         b_missing_lname_truth=partner_b_pool[10],
         b_invalid_dob_truth=partner_b_pool[15],
         b_short_year_truth=partner_b_pool[20],
+        tier3_a_originals=tier3_a_originals,
+        tier3_b_doppelgangers=tier3_b_doppelgangers,
     )
+
+
+def _build_tier3_doppelgangers(
+    originals: list[TruthPerson],
+    rng: random.Random,
+) -> list[TruthPerson]:
+    """Generate synthetic doppelgangers — different real people who share
+    first_name + ssn_last4 with the originals. Different DOB + last_name +
+    everything else, so Splink scores them at Tier 3 (review).
+    """
+    surnames = ["Anderson", "Williams", "Robinson", "Mitchell", "Jackson", "Patterson"]
+    cities = ["Austin", "Boulder", "Cleveland", "Dover", "El Paso", "Frankfort"]
+    states = ["TX", "CO", "OH", "DE", "TX", "KY"]
+
+    doppels: list[TruthPerson] = []
+    for i, orig in enumerate(originals):
+        # Shift DOB by 10-15 years and rotate month/day so it's clearly
+        # a different person born in a different decade.
+        year_shift = rng.choice([-15, -10, 10, 15])
+        new_year = max(1940, min(2005, orig.dob.year + year_shift))
+        new_dob = date(new_year, ((orig.dob.month + 6) % 12) + 1, ((orig.dob.day + 7) % 28) + 1)
+        # Same last 4 of SSN, different prefix.
+        last4 = orig.ssn[-4:]
+        new_area = rng.randint(900, 999)
+        new_group = rng.randint(70, 99)
+        new_ssn = f"{new_area:03d}-{new_group:02d}-{last4}"
+
+        new_last = surnames[i % len(surnames)]
+        new_city = cities[i % len(cities)]
+        new_state = states[i % len(states)]
+        new_first = orig.first_name  # shared with the PARTNER_A original
+        doppels.append(
+            TruthPerson(
+                truth_id=f"T3D{i:03d}",
+                first_name=new_first,
+                last_name=new_last,
+                dob=new_dob,
+                ssn=new_ssn,
+                street=f"{rng.randint(100, 999)} Different Ave",
+                city=new_city,
+                state=new_state,
+                zip_code=f"{rng.randint(10000, 99999):05d}",
+                phone=f"{rng.randint(200, 999):03d}-{rng.randint(200, 999):03d}-{rng.randint(1000, 9999):04d}",
+                email=f"{new_first.lower()}.{new_last.lower()}@example.invalid",
+            )
+        )
+    return doppels
 
 
 # ---------------------------------------------------------------------------
@@ -416,6 +484,16 @@ def _build_partner_b_day1(
         mutation = "name_typo_last" if offset == 0 else "address_format_diff"
         rows.append(_project_partner_b(truth, ext_id, mutations=(mutation,)))
         inventory.append(_inventory_entry(ext_id, truth.truth_id, "cross_partner_near_match"))
+
+    # Tier-3 ambiguity doppelgangers — share first_name + ssn_last4 with a
+    # PARTNER_A original but are different people. Splink scores them in the
+    # review-queue band.
+    for offset, doppel in enumerate(s.tier3_b_doppelgangers):
+        ext_id = f"B8{offset:04d}"
+        rows.append(_project_partner_b(doppel, ext_id))
+        entry = _inventory_entry(ext_id, doppel.truth_id, "tier3_ambiguity")
+        entry["paired_with_truth_id"] = s.tier3_a_originals[offset].truth_id
+        inventory.append(entry)
 
     return rows, inventory
 

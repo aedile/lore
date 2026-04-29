@@ -47,6 +47,7 @@ class PersistResult:
     canonical_inserted: int
     enrollments_inserted: int
     match_decisions_inserted: int
+    review_queue_inserted: int = 0
 
 
 # ---------------------------------------------------------------------------
@@ -140,12 +141,16 @@ def persist_canonical_members(
             enrollments_inserted += cur.rowcount or 0
 
     # Match decision rows — one per uid for traceability.
+    review_queue_inserted = 0
+    from prototype.identity import TIER_3
+
     for uid, decision in decisions_by_uid.items():
         score_breakdown = (
             json.dumps(_breakdown_to_jsonable(decision.score_breakdown))
             if decision.score_breakdown
             else None
         )
+        decision_id = str(uuid.uuid4())
         cur.execute(
             """
             INSERT INTO match_decision (
@@ -156,7 +161,7 @@ def persist_canonical_members(
             VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), %s)
             """,
             (
-                str(uuid.uuid4()),
+                decision_id,
                 uid,
                 decision.resolved_member_id,
                 decision.tier,
@@ -168,11 +173,36 @@ def persist_canonical_members(
         )
         match_decisions_inserted += 1
 
+        # Tier 3 outcomes route to the review_queue with score breakdown
+        # surfaced for the human reviewer (BR-101 + BR-105).
+        if decision.tier == TIER_3 and decision.score is not None:
+            candidate_member_ids = (
+                [decision.resolved_member_id] if decision.resolved_member_id else []
+            )
+            cur.execute(
+                """
+                INSERT INTO review_queue (
+                    queue_id, decision_id, candidate_record_ref,
+                    candidate_member_ids, score, queued_at
+                )
+                VALUES (%s, %s, %s, %s, %s, NOW())
+                """,
+                (
+                    str(uuid.uuid4()),
+                    decision_id,
+                    uid,
+                    candidate_member_ids,
+                    decision.score,
+                ),
+            )
+            review_queue_inserted += 1
+
     conn.commit()
     return PersistResult(
         canonical_inserted=canonical_inserted,
         enrollments_inserted=enrollments_inserted,
         match_decisions_inserted=match_decisions_inserted,
+        review_queue_inserted=review_queue_inserted,
     )
 
 
