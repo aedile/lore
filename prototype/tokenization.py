@@ -88,12 +88,10 @@ def suppression_hash(
     partner_id: str,
     partner_member_id: str,
 ) -> str:
-    """SHA-256 of the salted, normalized identity tuple per BR-703.
+    """Strict-tuple BR-703 hash. Catches same-partner re-introduction.
 
-    Holds no recoverable PII — irreversibility is the point. Identity
-    resolution looks up this hash against deletion_ledger.suppression_hash
-    before publishing any record; a hit routes the record to
-    SUPPRESSED_DELETED rather than ELIGIBLE_ACTIVE.
+    Holds no recoverable PII — irreversibility is the point. The hash is
+    deterministic, salted, and normalised for casing/whitespace.
     """
     if isinstance(dob, date):
         dob = dob.isoformat()
@@ -107,8 +105,26 @@ def suppression_hash(
     return hashlib.sha256(_salt() + payload).hexdigest()
 
 
+def suppression_hash_broad(*, dob: str | date, ssn_last4: str) -> str:
+    """Broad BR-703 hash on (dob, ssn_last4) — catches cross-partner
+    re-introduction with name typos.
+
+    Used in addition to ``suppression_hash`` so the demo's
+    delete-then-reintroduce-via-different-partner-with-name-typo flow
+    surfaces SUPPRESSED_DELETED automatically. ``ssn_last4`` collisions
+    inside a single DOB cohort are possible (1 in 10000) but acceptable
+    for the prototype scale; production tunes this with additional
+    discriminators per partner.
+    """
+    if isinstance(dob, date):
+        dob = dob.isoformat()
+    payload = b"suppression_broad:" + f"{dob}|{ssn_last4}".encode()
+    return hashlib.sha256(_salt() + payload).hexdigest()
+
+
 __all__ = [
     "suppression_hash",
+    "suppression_hash_broad",
     "tokenize_dob",
     "tokenize_last_name",
     "tokenize_name",

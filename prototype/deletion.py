@@ -30,7 +30,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from prototype.canonical import CanonicalState, assert_transition_allowed
-from prototype.tokenization import suppression_hash
+from prototype.tokenization import suppression_hash, suppression_hash_broad
 
 # ---------------------------------------------------------------------------
 # Audit event types emitted by this module (BR-704)
@@ -54,10 +54,12 @@ class DeletionRequest:
     member_id: str
     last_name: str
     dob: str  # ISO YYYY-MM-DD
-    # Each (partner_id, partner_member_id) pair becomes one suppression_hash
-    # so re-introduction via any partner the member was enrolled with is
-    # caught.
+    # Each (partner_id, partner_member_id) pair becomes one strict
+    # suppression_hash so re-introduction via the same partner+ID is caught.
     enrollments: list[tuple[str, str]]
+    # When provided, also writes a broad (dob, ssn_last4) suppression hash
+    # so re-introduction across partners with name typos is also caught.
+    ssn_last4: str | None = None
     request_id: str = field(default_factory=lambda: str(uuid.uuid4()))
 
 
@@ -95,25 +97,34 @@ def is_suppressed(
     dob: str,
     partner_id: str,
     partner_member_id: str,
+    ssn_last4: str | None = None,
 ) -> bool:
-    """Return True if (last_name, dob, partner_id, partner_member_id) maps
-    to a row in deletion_ledger whose override_count is zero."""
-    h = suppression_hash(
-        last_name=last_name,
-        dob=dob,
-        partner_id=partner_id,
-        partner_member_id=partner_member_id,
-    )
+    """Return True if any suppression-hash variant for this identity is in
+    the ledger with override_count == 0.
+
+    Variants tried (in order):
+    1. Strict per-enrollment (last_name, dob, partner_id, partner_member_id).
+    2. Broad (dob, ssn_last4) — catches cross-partner re-introduction with
+       name typos when ssn_last4 is known.
+    """
+    candidates: list[str] = [
+        suppression_hash(
+            last_name=last_name,
+            dob=dob,
+            partner_id=partner_id,
+            partner_member_id=partner_member_id,
+        ),
+    ]
+    if ssn_last4:
+        candidates.append(suppression_hash_broad(dob=dob, ssn_last4=ssn_last4))
+
     cur = conn.cursor()
     cur.execute(
-        "SELECT override_count FROM deletion_ledger WHERE suppression_hash = %s",
-        (h,),
+        "SELECT override_count FROM deletion_ledger WHERE suppression_hash = ANY(%s)",
+        (candidates,),
     )
-    row = cur.fetchone()
-    if row is None:
-        return False
-    (override_count,) = row
-    return override_count == 0
+    rows = cur.fetchall()
+    return any(override_count == 0 for (override_count,) in rows)
 
 
 def execute_deletion(
@@ -156,7 +167,8 @@ def execute_deletion(
 
     now_iso = datetime.now(UTC).isoformat()
 
-    # 1. Insert one ledger row per enrollment.
+    # 1. Insert ledger rows: one strict per enrollment, plus one broad
+    #    (dob, ssn_last4) when ssn_last4 is provided.
     request_uuid = (
         uuid.UUID(request.request_id) if _looks_like_uuid(request.request_id) else uuid.uuid4()
     )
@@ -177,6 +189,18 @@ def execute_deletion(
             (h, str(request_uuid)),
         )
         suppression_hashes.append(h)
+
+    if request.ssn_last4:
+        broad = suppression_hash_broad(dob=request.dob, ssn_last4=request.ssn_last4)
+        cur.execute(
+            """
+            INSERT INTO deletion_ledger (suppression_hash, deleted_at, deletion_request_id)
+            VALUES (%s, NOW(), %s)
+            ON CONFLICT (suppression_hash) DO NOTHING
+            """,
+            (broad, str(request_uuid)),
+        )
+        suppression_hashes.append(broad)
 
     # 2. Tombstone the canonical_member.
     cur.execute(
@@ -271,12 +295,15 @@ def route_for_publication(
     conn: Any,
     *,
     candidates: Iterable[tuple[str, str, str, str]],
+    ssn_last4_by_candidate: dict[tuple[str, str, str, str], str] | None = None,
 ) -> dict[tuple[str, str, str, str], bool]:
-    """Bulk variant of ``is_suppressed`` for pipeline use.
+    """Bulk variant of ``is_suppressed``.
 
-    ``candidates`` are tuples of (last_name, dob, partner_id, partner_member_id);
-    returns a dict mapping each tuple to True if suppressed.
+    ``candidates`` are tuples of (last_name, dob, partner_id, partner_member_id).
+    Optionally pass an ``ssn_last4_by_candidate`` map to also evaluate the
+    broad (dob, ssn_last4) suppression hash per candidate.
     """
+    ssn_lookup = ssn_last4_by_candidate or {}
     results: dict[tuple[str, str, str, str], bool] = {}
     for c in candidates:
         last_name, dob, partner_id, partner_member_id = c
@@ -286,6 +313,7 @@ def route_for_publication(
             dob=dob,
             partner_id=partner_id,
             partner_member_id=partner_member_id,
+            ssn_last4=ssn_lookup.get(c),
         )
     return results
 
