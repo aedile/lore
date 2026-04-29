@@ -177,6 +177,9 @@ def _cli() -> int:
     _print_section("BR-704 — Operator override (re-allow a suppressed identity)")
     _run_override_demo(conn, args.fixtures, result.audit_chain_path)
 
+    _print_section("BR-402 — Brute-force progression (lockout after 3 failures)")
+    _run_bruteforce_demo(conn, args.fixtures)
+
     _print_section("PRD #6 — Redaction scanner")
     if not result.redaction_matches:
         print("  PASS — zero PII pattern matches across the audit chain.")
@@ -384,6 +387,75 @@ def _typo_last_name(name: str) -> str:
     if len(name) < 3:
         return name + "x"
     return name[:2] + name[3:]
+
+
+def _run_bruteforce_demo(conn: object, fixtures_dir: Path) -> None:
+    """Demonstrate BR-402 progressive friction:
+
+    1. Three failed verifies against a non-existent (name, dob) anchor lock it.
+    2. A fourth verify on the same anchor still NOT_VERIFIED (lockout
+       short-circuit) — even if we used the correct details.
+    3. A verify against a DIFFERENT real identity still resolves to VERIFIED,
+       proving lockout is per-anchor not global.
+    """
+    from fastapi.testclient import TestClient
+
+    lookup = PostgresCanonicalLookup(conn)
+    # Persistent TestClient so the in-memory BruteForceTracker accumulates
+    # state across all attempts in this section.
+    client = TestClient(
+        create_app(
+            lookup=lookup,
+            settings=VerificationSettings(response_floor_ms=10.0),
+        )
+    )
+
+    # Pick a real ELIGIBLE_ACTIVE clean record for the per-anchor isolation
+    # test at the end.
+    import json as _json
+
+    inventory = _json.loads((fixtures_dir / "scenario_inventory.json").read_text())
+    rows = list(read_csv(fixtures_dir / "partner_a_day1.csv"))
+    clean_pmids = {
+        e["partner_member_id"]
+        for e in inventory["records"]
+        if e["scenario"] == "clean" and "partner_a_day1" in e["feed"]
+    }
+    real_row = next(r for r in rows if r["member_id"] in clean_pmids)
+    m, d, y = real_row["DOB"].split("/")
+    real_dob_iso = f"{int(y):04d}-{int(m):02d}-{int(d):02d}"
+
+    def _verify(first: str, last: str, dob: str, label: str) -> str:
+        body = {
+            "claim": {"first_name": first, "last_name": last, "date_of_birth": dob},
+            "context": {"client_id": "panel-attacker", "request_id": label},
+        }
+        return client.post("/v1/verify", json=body).json().get("status", "?")
+
+    # Three failures against the same fake anchor.
+    print("  Attacker probes a non-existent identity 3 times:")
+    for i in range(1, 4):
+        status = _verify("Phantom", "Probe", "1900-01-01", f"attempt-{i}")
+        print(f"    Attempt {i}: {status}")
+
+    # Fourth attempt — same anchor, now locked out short-circuit.
+    print()
+    status = _verify("Phantom", "Probe", "1900-01-01", "attempt-4")
+    print(f"  Attempt 4 on the locked anchor: {status}  (BR-402 short-circuit)")
+
+    # Per-anchor isolation: a real eligible member on a different anchor
+    # still resolves correctly.
+    real_status = _verify(
+        real_row["FirstName"],
+        real_row["LastName"],
+        real_dob_iso,
+        "real-user-on-different-anchor",
+    )
+    print(f"  A real eligible member on a different anchor: {real_status}")
+    print(
+        "  Lockout is scoped per (name_token, dob_token); attackers cannot DoS "
+        "the entire user base by probing one identity."
+    )
 
 
 if __name__ == "__main__":
