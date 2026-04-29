@@ -1,3 +1,3 @@
-"""lore-eligibility — Strategic data system for trusted partner eligibility and identity verification."""
+"""lore-eligibility — partner eligibility ingestion + identity verification."""
 
 __version__ = "0.1.0"

@@ -18,7 +18,6 @@ sys.path.insert(0, str(_SCRIPTS_DIR))
 
 import check_pii_in_fixtures as gate  # noqa: E402
 
-
 # ---------------------------------------------------------------------------
 # scan_line — attack
 # ---------------------------------------------------------------------------
@@ -27,7 +26,7 @@ import check_pii_in_fixtures as gate  # noqa: E402
 @pytest.mark.unit
 @pytest.mark.attack
 @pytest.mark.parametrize(
-    "line,expected_kind",
+    ("line", "expected_kind"),
     [
         ("ssn,123-45-6789,active", "SSN"),
         ("Patient born 1985-03-15 verified", "DOB-shape"),

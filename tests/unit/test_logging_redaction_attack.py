@@ -20,7 +20,6 @@ from lore_eligibility.bootstrapper.logging_config import (
     redact_pii_patterns,
 )
 
-
 # ---------------------------------------------------------------------------
 # Key-based redaction — attack tests
 # ---------------------------------------------------------------------------
@@ -159,7 +158,7 @@ def test_redact_pii_patterns_handles_multiple_in_one_string() -> None:
     assert "user@example.com" not in out["event"]
     assert "123-45-6789" not in out["event"]
     assert "555-123-4567" not in out["event"]
-    assert out["event"].count("***") >= 6  # 3 redactions × 2 markers each
+    assert out["event"].count("***") >= 6  # 3 redactions x 2 markers each
 
 
 @pytest.mark.unit
