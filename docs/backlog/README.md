@@ -29,7 +29,7 @@ Each story carries:
 
 | File | Phase | Goal |
 |------|-------|------|
-| [phase-00-governance.md](phase-00-governance.md) | Phase 00 (Harness) | Development substrate. Closing tasks tracked there; superseded by Phase 0 below for production. |
+| [phase-00-governance.md](phase-00-governance.md) | Phase 00 (Harness) | Development substrate (T-task format; not part of the production backlog). Closing tasks tracked here; superseded by Phase 0 below for production. |
 | [phase-foundation.md](phase-foundation.md) | Phase 0 — Foundation | Empty production substrate; governance roles designated; open ADRs scoped. |
 | [phase-single-partner.md](phase-single-partner.md) | Phase 1 — Single-Partner E2E | One partner, full pipeline shape, minimal feature surface. |
 | [phase-production-cutover.md](phase-production-cutover.md) | Phase 2 — Production Cutover | All v1 BRs satisfied. System is production-defensible. |
@@ -93,15 +93,15 @@ Compliance and UX stories are distributed across phases, not end-loaded. Each ph
 
 ## Traceability index
 
-Every story declares its originating BR/ADR/RR. CI gate (per BRD XR-012) verifies the inverse: every BR has at least one story implementing it across all phases combined. The traceability matrix is generated, not maintained by hand:
+Every story declares its originating BR/ADR/RR. The CI gate per BRD XR-012 verifies the inverse: every BR has at least one story implementing it across all phases combined. The traceability matrix is generated, not maintained by hand, by the script `scripts/build_traceability_matrix.py`.
+
+**Current status:** PLANNED. The traceability gate is specified in BRD XR-012 and the implementing script is tracked as backlog item P0-OBS-009. Until P0-OBS-009 lands, bidirectional traceability is enforced by convention and review, not by automated gate. This matches the LIVE / STUBBED / PLANNED-PHASE-N pattern from `HIPAA_POSTURE.md`.
+
+Generated artifact is not committed; CI rebuilds and diffs to detect orphan rules once the gate is LIVE.
 
 ```
 scripts/build_traceability_matrix.py docs/backlog/*.md > docs/backlog/traceability.generated.md
 ```
-
-Generated artifact is not committed; CI rebuilds and diffs to detect orphan rules.
-
-(Script is itself a backlog item — see P0-OBS-009.)
 
 ---
 
@@ -131,4 +131,11 @@ Stories that exist primarily to retire a risk-register item (RR-001 through RR-0
 - **No timelines** (per session feedback): T-shirt sizes only; no calendar dates anywhere in this backlog.
 - **PR-based workflow**: every story ships as one PR. Cross-PR coordination is captured in `Depends on`.
 - **Reviewers are scope-constrained**: a story declaring `Tier CRITICAL` cannot be merged with `Tier SUPPORTIVE` work in the same PR (cleaner audit trail; clearer rollback boundary).
-- **Agents as squad members**: where a story names a "squad", an agent persona may staff it in part or in full per the methodology in R8 P-005. Agent-staffed stories still go through PR review by a human.
+
+### Agents as squad members
+
+**What it means.** Where a story names a squad (e.g., "Owner: Verification squad"), an agent persona may staff that story in whole or in part. The squad is the team of record; the work executor may be a human, an agent, or a combination. Agent personas are documented in the agents directory (`.claude/agents/`) and follow the same role taxonomy as human contributors. The methodology is summarized here per R8 P-005 of the synthesis pass and is consistent with the hybrid scaled-agile framing in the file metadata.
+
+**Review and accountability.** Agent-staffed stories ship as PRs through the same review pipeline as human-authored work. A human reviewer with the appropriate CODEOWNERS designation must approve before merge. Agents do not bypass the review gate, the test gate, or the CONSTITUTION quality gates. The accountability boundary is the human reviewer, not the agent author.
+
+**Audit posture.** PR descriptions of agent-authored work declare the agent persona that produced the work in a structured commit-trailer field (`Agent-Author: <persona-name>`). This is captured in the git log and in the audit trail of the change. Audit defensibility is preserved because every code change has a human reviewer of record and every agent contribution is explicitly identified.
