@@ -118,6 +118,16 @@ external = ["DOC", "BLE001"]
 "src/lore_eligibility/bootstrapper/dependencies/*.py" = ["B008"]
 "src/lore_eligibility/bootstrapper/main.py" = ["B008"]
 "src/lore_eligibility/bootstrapper/routers/*.py" = ["B008"]
+# prototype/** runs under the relaxed harness profile (case-study deliverable
+# on synthetic data; not the production-shaped package). Test-style ignores
+# plus E501 (line length) and PT018 (compound assertions) for build velocity.
+# Production rules remain in force on src/lore_eligibility/.
+"prototype/**" = [
+    "S101", "S105", "S106", "S108", "S311", "S603", "S607",
+    "RUF001", "RUF002", "RUF003", "RUF012",
+    "PT018",
+    "E501",
+]
 
 # ---------------------------------------------------------------------------
 # Mypy — Strict Type Checking
