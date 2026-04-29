@@ -19,9 +19,11 @@ and the scanner runs in seconds for the demo.
 
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import json
 import re
+import threading
 import uuid
 from collections.abc import Iterable, Iterator
 from dataclasses import asdict, dataclass, field
@@ -71,21 +73,40 @@ _GENESIS_PRIOR_HASH = "0" * 64
 
 
 class AuditChain:
-    """Append-only JSONL with SHA-256 hash chain."""
+    """Append-only JSONL with SHA-256 hash chain.
+
+    ``append`` is concurrency-safe in two layers:
+
+    - ``threading.Lock`` serialises in-process appenders so two threads
+      cannot read the same prior_self_hash and write conflicting entries.
+    - ``fcntl.flock`` serialises across processes that share the same
+      file. Writers from a different process (e.g., a worker pool) will
+      block at the OS level until the in-progress writer completes.
+
+    The combination produces a chain that survives concurrent writers
+    without breaking the prior_event_hash linkage.
+    """
 
     def __init__(self, path: Path | str) -> None:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.touch(exist_ok=True)
+        self._thread_lock = threading.Lock()
 
     def append(self, event: AuditEvent) -> str:
         """Append ``event`` and return its ``self_hash``."""
-        prior_hash = self._last_self_hash() or _GENESIS_PRIOR_HASH
-        entry = self._entry_dict(event, prior_event_hash=prior_hash)
-        self_hash = _entry_self_hash(entry)
-        entry["self_hash"] = self_hash
-        with self.path.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(entry, sort_keys=True) + "\n")
+        with self._thread_lock:
+            with self.path.open("a", encoding="utf-8") as f:
+                fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+                try:
+                    prior_hash = self._last_self_hash() or _GENESIS_PRIOR_HASH
+                    entry = self._entry_dict(event, prior_event_hash=prior_hash)
+                    self_hash = _entry_self_hash(entry)
+                    entry["self_hash"] = self_hash
+                    f.write(json.dumps(entry, sort_keys=True) + "\n")
+                    f.flush()
+                finally:
+                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
         return self_hash
 
     def __iter__(self) -> Iterator[dict[str, Any]]:

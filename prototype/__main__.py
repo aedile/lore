@@ -24,9 +24,7 @@ DEFAULT_FIXTURES = REPO_ROOT / "prototype" / "fixtures"
 DEFAULT_OUTPUT = REPO_ROOT / "prototype" / "data"
 
 # Default DSN matches the docker-compose-dev-db.yml service.
-_DEFAULT_DSN = (
-    "postgresql://lore_eligibility:lore_eligibility@127.0.0.1:5432/lore_eligibility"
-)
+_DEFAULT_DSN = "postgresql://lore_eligibility:lore_eligibility@127.0.0.1:5432/lore_eligibility"
 
 
 def _print_section(title: str) -> None:
@@ -57,8 +55,7 @@ def _cli() -> int:
     except psycopg.OperationalError as exc:
         print(f"\nFAILED to connect: {exc}", file=sys.stderr)
         print(
-            "Hint: start the dev DB with `make dev-db-only` (docker-compose), "
-            "then re-run.",
+            "Hint: start the dev DB with `make dev-db-only` (docker-compose), then re-run.",
             file=sys.stderr,
         )
         return 2
@@ -125,8 +122,7 @@ def _cli() -> int:
         [
             all(not f.feed_quarantined for f in result.day1.feeds),
             result.day2.member_history_inserted >= 1,
-            result.day1.tier_histogram.get(TIER_2, 0)
-            + result.day2.tier_histogram.get(TIER_2, 0)
+            result.day1.tier_histogram.get(TIER_2, 0) + result.day2.tier_histogram.get(TIER_2, 0)
             >= 1,
             v.valid,
             result.redaction_matches == [],

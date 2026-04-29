@@ -18,6 +18,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import os
+import unicodedata
 from datetime import date
 
 # Default prototype salt. Override via the LORE_TOKEN_SALT env var.
@@ -30,13 +31,18 @@ def _salt() -> bytes:
 
 
 def _normalize_text(value: str) -> str:
-    """Lowercase, strip, collapse interior whitespace.
+    """NFC-normalise, lowercase, strip, collapse interior whitespace.
 
-    Tokens are deterministic over the normalized form so cross-partner
-    identity resolution can match "Sarah Johnson" against "  sarah  johnson"
-    once both have been tokenized.
+    Tokens are deterministic over the normalized form so:
+    - Cross-partner identity resolution can match "Sarah Johnson" against
+      "  sarah  johnson".
+    - Unicode equivalents collapse to one token: "café" (NFC, single 'é')
+      and "café" (NFD, 'e' + combining acute) tokenize identically.
+      Without NFC normalisation an attacker could evade identity
+      resolution by sending the alternate form.
     """
-    return " ".join((value or "").strip().lower().split())
+    nfc = unicodedata.normalize("NFC", value or "")
+    return " ".join(nfc.strip().lower().split())
 
 
 def _hmac_token(category: bytes, value: str) -> str:
