@@ -159,7 +159,7 @@ Penetration testing (per R3 S-052), third-party security review, runbook formali
 - **AC**
   - Given the review, when conducted, then it produces a list of audit-log accesses by principal + purpose with anomalous-access flagged for follow-up.
   - Given an anomaly, when reviewed, then a documented investigation outcome is recorded.
-- **Originating** BR-503, R3 S-058, R4 C-079
+- **Originating** BR-503, BR-505, R3 S-058, R4 C-079
 - **Depends on** P1-AUD-002, P2-UX-002
 - **Tier** CRITICAL · **Size** M · **Owner** Privacy Officer
 

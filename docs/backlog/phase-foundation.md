@@ -31,7 +31,10 @@ Land the empty production substrate that everything else builds on; establish go
 - Privacy Officer + Security Officer designated and US-resident (BR-1101, BR-1102; AD-030).
 - PHI inventory documented and counsel-reviewed (BR-1202).
 - 42 CFR Part 2 decision documented (BR-1402; RR-006).
+- COPPA applicability decision documented (RR-007).
 - Attestation roadmap decided — HITRUST or SOC 2 (RR-004).
+- Required HIPAA Policies & Procedures authored, counsel-reviewed, and stored (BR-1204).
+- Background-check policy for sensitive roles documented and integrated with IAM provisioning (BR-1105).
 - ARD `[part-2-implementation]`, `[member-portal-scope]`, `[reviewer-decision-support]`, `[friction-mechanism]`, `[iac-framework]`, `[dr-strategy]`, `[partner-sftp]`, `[sequelae-ph-ml-access]` ADRs all authored or scoped.
 
 ---
@@ -314,7 +317,7 @@ Land the empty production substrate that everything else builds on; establish go
   - Given a PR touching only `modules/verification/`, when CI runs, then only the Verification service image rebuilds.
   - Given a PR touching `shared/`, when CI runs, then all dependent services rebuild (transitive dependency respected).
   - Given a PR touching only docs, when CI runs, then no service rebuilds (zero image work).
-- **Originating** ADR-0002, R5 D-007
+- **Originating** ADR-0002, AD-019, R5 D-007
 - **Depends on** P0-IAM-003
 - **Tier** CRITICAL · **Size** M · **Owner** Platform/SRE
 
@@ -326,7 +329,7 @@ Land the empty production substrate that everything else builds on; establish go
   - Given a CI build, when an image is pushed, then it is signed with Cosign using the GitHub Actions OIDC identity.
   - Given an unsigned image manually pushed to Artifact Registry, when deploy is attempted, then Binary Authorization denies.
   - Given a signed image, when its signature is verified out-of-band, then verification succeeds and surfaces the signing identity.
-- **Originating** ADR-0007 §"Container hardening", R3 S-056
+- **Originating** ADR-0007 §"Container hardening", AD-031, R3 S-056
 - **Depends on** P0-CICD-001, P0-IAM-003
 - **Tier** CRITICAL · **Size** M · **Owner** Security
 
@@ -338,7 +341,7 @@ Land the empty production substrate that everything else builds on; establish go
   - Given the BA policy, when reviewed, then it requires the Cosign attestor on `prod` Cloud Run services and warns on `staging`.
   - Given a deploy of an unsigned image to prod, when initiated, then BA blocks the deploy with a clear error.
   - Given a break-glass workflow (security-incident emergency deploy), when invoked, then it requires a signed override + emits a P0 audit event.
-- **Originating** ADR-0007, R3 S-056
+- **Originating** ADR-0007, AD-031, R3 S-056
 - **Depends on** P0-CICD-002
 - **Tier** CRITICAL · **Size** S · **Owner** Security
 
@@ -673,6 +676,30 @@ Land the empty production substrate that everything else builds on; establish go
 - **Depends on** P0-CFG-001
 - **Tier** IMPORTANT · **Size** S · **Owner** Platform/SRE
 
+#### P0-CFG-003 — No-magic-numbers gate (XR-002)
+- **As** the Architecture team
+  **I want** a CI gate scanning production code for inline numeric constants that govern policy behavior
+  **So that** XR-002 holds: every numeric requirement traces to a named parameter in the ledger.
+- **AC**
+  - Given a PR introducing an inline numeric (e.g., `if attempts > 3:` instead of `if attempts > settings.max_attempts:`), when CI runs, then a custom lint rule fails the PR with the offending file/line.
+  - Given an allowlist (HTTP status codes, port numbers, mathematical constants like `60` for seconds-per-minute), when reviewed, then the allowlist is bounded + documented and CI exempts those.
+  - Given the parameter ledger, when a config parameter is referenced via the wrong path (string-literal access), when scanned, then a separate lint catches it.
+- **Originating** XR-002, XR-010
+- **Depends on** P0-CFG-001
+- **Tier** IMPORTANT · **Size** S · **Owner** Architecture
+
+#### P0-CFG-004 — Decision-authority + approver attribution gate (XR-011)
+- **As** the Architecture team
+  **I want** a CI gate that verifies: every ADR carries an `Approver` field at the appropriate authority tier; every BRD amendment PR carries the corresponding approver in CODEOWNERS sign-off; every parameter ledger row classified as **Strategic** has a named approver
+  **So that** XR-011 holds: decision authority is mechanically auditable, not a convention.
+- **AC**
+  - Given an ADR PR missing an approver field at the required tier (engineering lead / CTO / CEO per the parameter or decision class), when CI runs, then the gate fails the PR.
+  - Given a BRD/ARD amendment PR, when CI runs, then required-approver CODEOWNERS sign-off is verified by the gate (the PR is blocked otherwise).
+  - Given the parameter ledger, when scanned, then every Strategic-tier row has a named approver; missing entries trip the gate.
+- **Originating** XR-011, AD-026
+- **Depends on** P0-CFG-001
+- **Tier** IMPORTANT · **Size** S · **Owner** Architecture
+
 ---
 
 ### Epic ADR — Open ADRs Authored or Scoped
@@ -750,6 +777,17 @@ Land the empty production substrate that everything else builds on; establish go
 
 #### P0-ADR-008 — Scope `[iac-framework]` ADR (covered by P0-IAC-001)
 - (Covered — see P0-IAC-001.)
+
+#### P0-ADR-009 — COPPA applicability decision
+- **As** the Privacy Officer
+  **I want** a documented COPPA applicability decision per partner archetype
+  **So that** RR-007 is closed before Phase 1 partner onboarding (COPPA applicability changes the consent model + identifiable-data handling for under-13 enrollees).
+- **AC**
+  - Given the decision document, when reviewed, then it lists partner archetypes (commercial health plan with pediatric line, ACO with dependent enrollment, etc.) and COPPA applicability per archetype with counsel rationale.
+  - Given a future partner whose under-13 population is unclear at onboarding, when their COPPA status is evaluated, then the document directs to the counsel review path.
+- **Originating** RR-007
+- **Depends on** P0-COM-001
+- **Tier** CRITICAL · **Size** M · **Owner** Privacy Officer
 
 ---
 
@@ -851,6 +889,30 @@ Land the empty production substrate that everything else builds on; establish go
 - **Depends on** P0-COM-001
 - **Tier** IMPORTANT · **Size** S · **Owner** Privacy Officer
 
+#### P0-COM-010 — Background-check policy for sensitive roles (BR-1105)
+- **As** the Security Officer
+  **I want** a background-check policy for sensitive roles (Privacy Officer, Security Officer, Vault administrators, reviewers, anyone with detok rights) integrated with IAM provisioning
+  **So that** BR-1105 holds before any sensitive-role principal is granted access.
+- **AC**
+  - Given the policy, when reviewed, then it specifies: which roles are "sensitive", check scope (criminal, employment, education as applicable), vendor selection, refresh cadence, exception authority.
+  - Given an IAM-provisioning request for a sensitive role, when initiated, then the workflow blocks until the background-check completion record is on file.
+  - Given a completed check, when stored, then it is in the documentation retention store with appropriate access controls (HR-tier, not Engineering-tier).
+- **Originating** BR-1105
+- **Depends on** P0-COM-002, P0-COM-006
+- **Tier** CRITICAL · **Size** M · **Owner** Security Officer
+
+#### P0-COM-011 — Policies & Procedures content authored (BR-1204, §164.316)
+- **As** the Privacy Officer + Security Officer
+  **I want** all required HIPAA Policies & Procedures authored, counsel-reviewed, signed-off, and stored
+  **So that** BR-1204 and §164.316 hold before Phase 1 production traffic.
+- **AC**
+  - Given the P&P set, when reviewed against §164.316 + Privacy Rule + Security Rule + Breach Notification Rule, then every required policy exists (access management, audit controls, sanctions, training, breach response, member rights, contingency, device + media, transmission security, etc.).
+  - Given each P&P, when stored, then it is in the documentation retention store with version history (P0-COM-006) and counsel sign-off attached.
+  - Given a workforce member, when onboarding, then they acknowledge applicable P&Ps as part of access provisioning.
+- **Originating** BR-1204, BR-1201
+- **Depends on** P0-COM-001, P0-COM-002, P0-COM-006
+- **Tier** CRITICAL · **Size** L · **Owner** Privacy Officer
+
 ---
 
 ### Epic UX — UX Foundation
@@ -884,7 +946,7 @@ Land the empty production substrate that everything else builds on; establish go
 - **AC**
   - Given a PR introducing a WCAG violation, when CI runs, then the gate fails with the violation listed.
   - Given the gate config, when reviewed, then the WCAG 2.1 AA ruleset is the baseline (not a subset).
-- **Originating** XR-009, R6 U-039
+- **Originating** XR-009, BR-1304, R6 U-039
 - **Depends on** P0-UX-001
 - **Tier** IMPORTANT · **Size** S · **Owner** UX
 
@@ -895,7 +957,7 @@ Land the empty production substrate that everything else builds on; establish go
 - **AC**
   - Given the framework, when reviewed, then it specifies: language tone (no blame), failure-state recovery paths, plain-language commitment, safe-navigation patterns, escalation-to-human path.
   - Given a UX review, when applied, then a checklist derived from the framework is part of every PR.
-- **Originating** R6 U-001, R6 U-070, XR-007
+- **Originating** R6 U-001, R6 U-070, XR-007, BR-1305
 - **Depends on** —
 - **Tier** IMPORTANT · **Size** M · **Owner** UX
 
@@ -906,7 +968,7 @@ Land the empty production substrate that everything else builds on; establish go
 - **AC**
   - Given the standard, when reviewed, then it specifies reading-level target (e.g., 6th–8th grade), preferred-language rendering chain, RTL support commitment, screen-reader contract.
   - Given a member-facing string, when reviewed, then it passes a readability check (Hemingway / Flesch-Kincaid) at the target level.
-- **Originating** XR-007, XR-008
+- **Originating** XR-007, XR-008, BR-1307
 - **Depends on** P0-UX-001
 - **Tier** IMPORTANT · **Size** S · **Owner** UX
 
@@ -969,9 +1031,9 @@ Land the empty production substrate that everything else builds on; establish go
 |-------|------------------|------------------------|
 | Engineering | P0-TBL-001..004, P0-TOK-001..003, P0-OBS-008 | P0-OBS-005, P0-OBS-006, P0-OBS-009 |
 | Security | P0-GCP-004..005, P0-IAM-001..003, P0-VPC-001..003, P0-KMS-001..004, P0-IAC-003, P0-CICD-002..005, P0-SEC-001, P0-SEC-002, P0-SEC-004 | P0-IAM-004, P0-CICD-006, P0-OBS-007, P0-SEC-003 |
-| Compliance | P0-COM-001..008 | P0-COM-009, P0-ADR-001 |
+| Compliance | P0-COM-001..008, P0-COM-010, P0-COM-011, P0-ADR-009 | P0-COM-009, P0-ADR-001 |
 | UX | P0-UX-001, P0-UX-003, P0-UX-004 | P0-UX-002, P0-UX-005 |
-| Infrastructure | P0-GCP-001..002, P0-DAT-001..005, P0-IAC-001..002, P0-CICD-001, P0-OBS-001..004 | P0-GCP-003 |
+| Infrastructure | P0-GCP-001..002, P0-DAT-001..005, P0-IAC-001..002, P0-CICD-001, P0-OBS-001..004 | P0-CFG-003, P0-GCP-003 |
 
 ## Phase 0 risk-register linkage
 
@@ -980,6 +1042,7 @@ Land the empty production substrate that everything else builds on; establish go
 | RR-001 (BigQuery + Composer + AlloyDB confirmed) | P0-DAT-001, P0-DAT-004, P0-IAC-001 |
 | RR-004 (HITRUST or SOC 2 decision) | P0-COM-008 |
 | RR-006 (42 CFR Part 2 applicability) | P0-ADR-001, P0-COM-007 |
+| RR-007 (COPPA applicability) | P0-ADR-009 |
 | RR-008 (vendor concentration board ack) | P0-GCP-003 (region/zone ADR), P0-ADR-005 (DR strategy) |
 | RR-009 (member portal scope) | P0-ADR-002 |
 | RR-010 (reviewer build vs buy) | P0-ADR-003 |

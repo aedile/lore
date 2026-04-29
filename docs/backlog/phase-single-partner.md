@@ -190,9 +190,21 @@ A single partner, real format, ingested through verification, with the architect
 - **AC**
   - Given a feed end-of-run, when reconciliation runs, then the equality holds; otherwise a P1 alert fires.
   - Given a reconciliation failure, when triaged, then the per-stage row counts are queryable for forensic.
-- **Originating** BR-605
+- **Originating** BR-605, BR-306
 - **Depends on** P1-DQ-001..P1-DQ-004, P1-IDR-001..002
 - **Tier** CRITICAL · **Size** S · **Owner** Ingestion
+
+#### P1-DQ-006 — Stale baseline warning (BR-603)
+- **As** the Ingestion squad
+  **I want** detection of feeds arriving outside the partner's expected cadence (`PARTNER_CADENCE_DAYS`) so a missed feed is surfaced as a stale-baseline warning
+  **So that** BR-603 holds: silent partner-side outages don't degrade canonical state without notice.
+- **AC**
+  - Given a partner with `PARTNER_CADENCE_DAYS=7`, when no feed is received within 7 days, then a P2 alert fires for partner-onboarding.
+  - Given a feed arriving on schedule, when ingested, then the next-expected-arrival timer resets per partner.
+  - Given a partner whose cadence config was just changed, when applied, then the new cadence governs forward without retroactive false positives.
+- **Originating** BR-603, BR-801
+- **Depends on** P1-ONB-001, P1-DQ-001
+- **Tier** IMPORTANT · **Size** S · **Owner** Ingestion
 
 ---
 
@@ -206,7 +218,7 @@ A single partner, real format, ingested through verification, with the architect
   - Given a staging record matching exactly one canonical member on the deterministic anchor, when resolved, then the record auto-merges (no review queue) and a `MATCH_TIER_1` audit event fires.
   - Given a staging record matching zero canonical members, when resolved, then it routes to "new canonical member" path.
   - Given a staging record matching > 1 canonical member on the deterministic anchor, when resolved, then it routes to manual review (anomaly; should not happen and indicates upstream issue).
-- **Originating** BR-101, AD-008, AD-011
+- **Originating** BR-101, BR-102, AD-008, AD-011
 - **Depends on** P1-CAN-001
 - **Tier** CRITICAL · **Size** M · **Owner** Identity Resolution
 
@@ -258,7 +270,7 @@ A single partner, real format, ingested through verification, with the architect
   - Given an attempt to transition from `TERMINATED` directly to `ELIGIBLE_ACTIVE`, when called, then the engine raises `ILLEGAL_TRANSITION` and audits.
   - Given a valid transition (e.g., `PENDING_RESOLUTION` → `ELIGIBLE_ACTIVE`), when called, then it succeeds, persists, and emits a state-change event via outbox.
   - Given the BR-202 transition matrix, when exhaustively tested, then 100% of cells (legal + illegal) are covered by tests.
-- **Originating** BR-202
+- **Originating** BR-201, BR-202
 - **Depends on** P1-CAN-001
 - **Tier** CRITICAL · **Size** M · **Owner** Canonical Eligibility
 
@@ -293,9 +305,22 @@ A single partner, real format, ingested through verification, with the architect
   - Given a state change committed, when the outbox is polled, then a corresponding row exists with the canonical event payload.
   - Given a transaction rollback, when reviewed, then no outbox row was created (atomicity preserved).
   - Given the publisher draining the outbox, when it publishes to Pub/Sub, then it deletes the row only after acked publish.
-- **Originating** ADR-0005, AD-027
+- **Originating** BR-206, ADR-0005, AD-027
 - **Depends on** P1-CAN-002, P0-TBL-001
 - **Tier** CRITICAL · **Size** S · **Owner** Canonical Eligibility
+
+#### P1-CAN-006 — Grace-period transitions (BR-203)
+- **As** the Canonical Eligibility squad
+  **I want** the state machine to honor `GRACE_PERIOD_DAYS` such that loss-of-eligibility events transition members to a grace state before terminal-eligible-end
+  **So that** BR-203 holds: short partner-side gaps don't immediately terminate eligibility, member-impacting cliff effects are avoided.
+- **AC**
+  - Given a partner-side eligibility-loss event for a member with active enrollment, when processed, then the member transitions to the grace state with `grace_until = now + GRACE_PERIOD_DAYS`.
+  - Given the grace timer expiring without re-instatement, when the scheduled transition runs, then the member moves to the terminal-eligible-end state and emits the appropriate audit event.
+  - Given re-instatement during grace, when applied, then the member returns to ELIGIBLE_ACTIVE without traversing terminal states (no false-end audit).
+  - Given the parameter, when changed via XR-010 promotion path, then in-flight grace timers are not retroactively re-anchored (grace_until is materialized at transition time).
+- **Originating** BR-203, BR-202
+- **Depends on** P1-CAN-002, P0-CFG-001
+- **Tier** CRITICAL · **Size** M · **Owner** Canonical Eligibility
 
 ---
 
@@ -372,6 +397,18 @@ A single partner, real format, ingested through verification, with the architect
 - **Depends on** P1-VER-001, P1-AUD-001
 - **Tier** CRITICAL · **Size** S · **Owner** Verification
 
+#### P1-VER-007 — Verification availability SLO + alerting (BR-405)
+- **As** the Verification squad + Platform/SRE
+  **I want** the Verification API SLO defined at `VERIFICATION_AVAILABILITY_PCT` (99.9%) and a hard-block alert at `VERIFICATION_AVAILABILITY_HARDBLOCK_PCT` (99.95%)
+  **So that** BR-405 holds: availability is measured + alerted continuously, not assumed.
+- **AC**
+  - Given the SLO, when computed daily over a rolling 30-day window, then it is queryable and dashboarded.
+  - Given availability dropping below the hardblock threshold, when sustained over the alerting window, then a P0 alert fires + the auto-rollback hook (per ADR-0007 deploy strategy) blocks further deploys.
+  - Given a maintenance window, when scheduled + audited, then the SLO calculation respects the window per the documented exclusion policy (no silent suppression).
+- **Originating** BR-405, AD-021
+- **Depends on** P1-VER-001, P0-OBS-006
+- **Tier** CRITICAL · **Size** M · **Owner** Verification
+
 ---
 
 ### Epic TOK — Tokenization Production-Ready
@@ -411,7 +448,7 @@ A single partner, real format, ingested through verification, with the architect
   - Given an outbox row inserted, when the publisher polls (default interval 1s), then it publishes to the topic and deletes the row on ack.
   - Given a publish failure, when retried, then the row is not deleted until success; backoff is exponential.
   - Given the publisher under load (1000 events/sec), when measured, then end-to-end latency p95 < 5s from outbox-insert to BigQuery audit row.
-- **Originating** ADR-0005, AD-027
+- **Originating** ADR-0005, AD-020, AD-027
 - **Depends on** P0-TBL-001, P0-DAT-003
 - **Tier** CRITICAL · **Size** L · **Owner** Audit
 
@@ -423,7 +460,7 @@ A single partner, real format, ingested through verification, with the architect
   - Given an audit event published, when the pipeline runs, then a BigQuery row appears within 30s.
   - Given duplicate events (at-least-once delivery), when consumed, then the consumer dedupes via `event_id` (idempotent per ADR-0005).
   - Given the pipeline failing, when restarted, then it resumes from last checkpoint with no double-counting.
-- **Originating** BR-503, ADR-0005, ADR-0006
+- **Originating** BR-503, AD-013, AD-015, ADR-0005, ADR-0006
 - **Depends on** P1-AUD-001, P0-DAT-004
 - **Tier** CRITICAL · **Size** L · **Owner** Audit
 
@@ -463,7 +500,7 @@ A single partner, real format, ingested through verification, with the architect
   - Given a write to AlloyDB, when monitored, then the corresponding BigQuery row appears within `DATASTREAM_LAG_TARGET_SECONDS` (default 30s).
   - Given Datastream lag exceeding the target, when sustained for > 5 min, then a P2 alert fires.
   - Given the BigQuery `analytical` dataset, when queried, then PII-tier columns are masked or excluded per AD-007 + AD-002.
-- **Originating** AD-007, AD-022, RR-001, BR-205
+- **Originating** AD-004, AD-006, AD-007, AD-022, RR-001, BR-205
 - **Depends on** P0-DAT-004, P1-CAN-001
 - **Tier** CRITICAL · **Size** M · **Owner** Data Engineering
 
@@ -478,6 +515,19 @@ A single partner, real format, ingested through verification, with the architect
 - **Originating** AD-002, BR-506, RR-001
 - **Depends on** P1-DAT-001
 - **Tier** CRITICAL · **Size** M · **Owner** Data Engineering
+
+#### P1-DAT-003 — Cross-region backup replication establishment (AD-028)
+- **As** the Platform/SRE squad
+  **I want** AlloyDB + Cloud SQL Vault cross-region backup replication established to us-east1 (US-only) and Datastream targeting BigQuery US multi-region
+  **So that** AD-028 holds operationally before the first DR drill (P1-DR-001) — replication is the prerequisite for failover.
+- **AC**
+  - Given AlloyDB primary in the prod region, when replication is configured, then a continuous backup replica exists in us-east1 with documented RPO < `RPO_TARGET_SECONDS`.
+  - Given Cloud SQL Vault, when replication is configured, then it replicates to us-east1 with KMS keys also replicated/keyring-mirrored per the Vault keyring policy (Compliance-org coordinates).
+  - Given Datastream, when configured, then its BigQuery target uses the US multi-region location (not single-region).
+  - Given a synthetic compromise of the prod region (drill or test), when replicas are inspected, then replication lag was within RPO at compromise time.
+- **Originating** AD-028, AD-021, P0-ADR-005
+- **Depends on** P0-DAT-001, P0-DAT-002, P0-ADR-005
+- **Tier** CRITICAL · **Size** L · **Owner** Platform/SRE
 
 ---
 
@@ -503,7 +553,7 @@ A single partner, real format, ingested through verification, with the architect
   - Given the hourly schedule, when triggered, then the chain head + timestamp + signature is appended to the Compliance-org bucket within 60s.
   - Given the published anchor, when verified out-of-band, then signature validates against the Compliance-org KMS public key.
   - Given an Engineering-org admin attempting to write the anchor bucket, when attempted, then it is denied (cross-org IAM separation).
-- **Originating** ADR-0008 §3a
+- **Originating** ADR-0008 §3a, AD-023
 - **Depends on** P1-ANC-001, P0-GCP-001
 - **Tier** CRITICAL · **Size** M · **Owner** Audit
 
@@ -625,6 +675,19 @@ A single partner, real format, ingested through verification, with the architect
 - **Depends on** P1-COM-001..004, P1-VER-005, P1-AUD-004, P1-ANC-001
 - **Tier** CRITICAL · **Size** S · **Owner** Privacy Officer
 
+#### P1-COM-006 — Workforce departure procedures (BR-1106)
+- **As** the Security Officer
+  **I want** documented workforce-departure procedures: access revocation timing, audit-review window (`DEPARTURE_AUDIT_REVIEW_DAYS`), lookback (`DEPARTURE_AUDIT_REVIEW_LOOKBACK_DAYS`), exit interview, asset return
+  **So that** BR-1106 holds: a departing workforce member's access is revoked promptly and their pre-departure activity is reviewed for anomalies.
+- **AC**
+  - Given a workforce-departure event (HR system trigger or manual), when fired, then all IAM access is revoked within `DEPARTURE_REVOCATION_TARGET_MINUTES` and a departure audit-review ticket lands in the Security Officer queue.
+  - Given the audit-review ticket, when handled, then it is completed within `DEPARTURE_AUDIT_REVIEW_DAYS` and reviews the prior `DEPARTURE_AUDIT_REVIEW_LOOKBACK_DAYS` of activity for anomalies.
+  - Given a high-risk departure (involuntary termination, sensitive role), when escalated, then the audit review is expedited per the documented exception policy.
+  - Given the procedure, when reviewed, then it is in the documentation retention store with version history + counsel sign-off.
+- **Originating** BR-1106
+- **Depends on** P0-COM-002, P0-COM-005, P0-IAM-004
+- **Tier** CRITICAL · **Size** M · **Owner** Security Officer
+
 ---
 
 ### Epic UX — UX Phase 1
@@ -648,7 +711,7 @@ A single partner, real format, ingested through verification, with the architect
 - **AC**
   - Given the blueprint, when reviewed, then it covers contact channel, identity-proofing standard, restoration authority, SLA, audit-emission requirements.
   - Given the blueprint, when shared with Operations, then it is buildable into a runbook for Phase 2.
-- **Originating** BR-1308, R6 U-001
+- **Originating** BR-1308, BR-1302, R6 U-001
 - **Depends on** P0-UX-004
 - **Tier** CRITICAL · **Size** M · **Owner** UX
 
@@ -721,11 +784,11 @@ A single partner, real format, ingested through verification, with the architect
 
 | Track | Critical stories | Important / Supportive |
 |-------|------------------|------------------------|
-| Engineering | P1-ING-001..006, P1-DQ-001..003, P1-DQ-005, P1-IDR-001..003, P1-CAN-001..005, P1-VER-001..006, P1-TOK-001, P1-AUD-001..003, P1-DAT-001..002, P1-ANC-001..004, P1-ONB-001..002, P1-TST-001..003 | P1-DQ-004, P1-TOK-002, P1-ONB-003 |
+| Engineering | P1-ING-001..006, P1-DQ-001..003, P1-DQ-005, P1-IDR-001..003, P1-CAN-001..006, P1-VER-001..007, P1-TOK-001, P1-AUD-001..003, P1-DAT-001..002, P1-ANC-001..004, P1-ONB-001..002, P1-TST-001..003 | P1-DQ-004, P1-DQ-006, P1-TOK-002, P1-ONB-003 |
 | Security | P1-AUD-004, P1-VER-002, P1-VER-005 | (Phase 0 baseline carries) |
-| Compliance | P1-COM-001..005 | — |
+| Compliance | P1-COM-001..006 | — |
 | UX | P1-UX-001..003 | — |
-| Infrastructure | P1-DR-001 | — |
+| Infrastructure | P1-DAT-003, P1-DR-001 | — |
 
 ## Phase 1 risk-register linkage
 

@@ -46,6 +46,9 @@ All v1 BRs satisfied. System is production-defensible.
 | REV | Manual Review Queue + Reviewer Interface | Queue, UI, decision support |
 | BFP | Brute Force Protection | BR-402 progression, friction challenge, lockout |
 | DEL | Deletion Workflow + Ledger | BR-701..704; HMAC-keyed ledger; suppression LIVE |
+| ING | Ingestion Phase 2 | Late-arriving file ordering, replay orchestrator + scope preview |
+| CAN | Canonical Eligibility Phase 2 | Operational history window enforcement (AD-005) |
+| TOK | Tokenization Contract Enforcement | Sync-detok-only gate (AD-010) |
 | REC | Reconciliation Jobs | Cross-stage row-count + state-coherence validation |
 | DRF | Drift Detection (Enhanced) | Schema + profile drift with auto-quarantine |
 | ANC | Audit Chain Hardening | GCS Bucket Lock retention LOCKED; chain validator continuous |
@@ -121,6 +124,19 @@ All v1 BRs satisfied. System is production-defensible.
 - **Depends on** P2-SPK-001
 - **Tier** CRITICAL · **Size** S · **Owner** Identity Resolution
 
+#### P2-SPK-006 — Splink model lifecycle (shadow-mode + held-out evaluation)
+- **As** the Identity Resolution squad + ML lead
+  **I want** Splink model artifacts versioned in Cloud Storage with a documented promotion gate: shadow-mode evaluation against live traffic + held-out evaluation set + auditor-presentable performance delta vs. prior model
+  **So that** AD-032 holds: the matching model can evolve without unobserved regressions.
+- **AC**
+  - Given a candidate model, when promoted, then it runs in shadow mode (predictions logged but not actioned) against ≥ N production samples and the precision/recall delta vs. the live model is reported.
+  - Given the held-out evaluation set, when the candidate is scored, then results are byte-reproducible (per P2-SPK-005) and the comparison is recorded against `model_version`.
+  - Given a promotion attempt without a passing shadow-mode evaluation + held-out evaluation, when CI/CD runs, then promotion is blocked with the missing-evidence error.
+  - Given a promoted model, when in production, then `match_decision` rows carry `model_version` for retroactive interpretation.
+- **Originating** AD-032, BR-104, R1 F-009, RR-005
+- **Depends on** P2-SPK-001, P2-SPK-005, P0-DAT-005
+- **Tier** CRITICAL · **Size** L · **Owner** Identity Resolution
+
 ---
 
 ### Epic REV — Manual Review Queue + Reviewer Interface
@@ -195,7 +211,7 @@ All v1 BRs satisfied. System is production-defensible.
 - **AC**
   - Given N+1 failed verifications for the same claim within the window, when issued, then the (N+1)th is rate-limited (response: NOT_VERIFIED, latency-floor enforced).
   - Given a successful verification, when followed by a failure, then the counter behavior matches the BR-402 spec.
-- **Originating** BR-402
+- **Originating** BR-402, XR-004
 - **Depends on** P2-BFP-001
 - **Tier** CRITICAL · **Size** S · **Owner** Verification
 
@@ -230,7 +246,7 @@ All v1 BRs satisfied. System is production-defensible.
 - **AC**
   - Given a member contacting the lockout recovery channel, when their identity is proven per the standard, then an operator can clear the lockout via an audited admin action.
   - Given the admin action, when audited, then it carries actor, member token, identity-proof method, justification, two-person review (if required by AD-026 for the action class).
-- **Originating** BR-1308, P1-UX-002
+- **Originating** BR-1308, BR-1302, P1-UX-002
 - **Depends on** P2-BFP-004, P1-UX-002, P2-TWP-001
 - **Tier** CRITICAL · **Size** M · **Owner** Operations
 
@@ -298,6 +314,66 @@ All v1 BRs satisfied. System is production-defensible.
 
 ---
 
+### Epic ING — Ingestion Phase 2 (Late-Arriving + Replay)
+
+#### P2-ING-001 — Late-arriving file ordering (BR-604)
+- **As** the Ingestion squad
+  **I want** the pipeline to handle out-of-order partner-feed arrival: a feed timestamped earlier than an already-processed feed must be reconciled correctly without producing inverted SCD2 history
+  **So that** BR-604 holds: late-arriving files don't corrupt the canonical history.
+- **AC**
+  - Given two feeds A (timestamped T) and B (timestamped T+1) where B arrives first and is processed, when A arrives later, then the pipeline reorders or quarantines A per the documented policy and the resulting `member_history` reflects T-then-T+1 ordering with no closed-then-reopened anomalies.
+  - Given an out-of-order arrival exceeding the late-arrival tolerance window, when detected, then the feed is quarantined and a P1 alert fires (anomaly: partner SLA broken).
+  - Given the policy, when reviewed, then it is documented + counsel-aligned (impact on member-experience attestations).
+- **Originating** BR-604, BR-606, AD-022
+- **Depends on** P1-ING-005, P1-CAN-003
+- **Tier** CRITICAL · **Size** L · **Owner** Ingestion
+
+#### P2-ING-002 — Replay orchestrator + scope preview (BR-607)
+- **As** the Ingestion squad
+  **I want** a replay orchestrator that, given a target replay scope (date range, partner, feed-id list), produces a preview of what will change before executing
+  **So that** BR-607 holds: a re-process or re-ingest is reviewable + auditable, not a blind redo.
+- **AC**
+  - Given a replay request, when previewed, then the report shows: rows-to-be-replayed, expected canonical-state-changes, rows-to-be-quarantined-on-replay, predicted reconciliation delta — all without commiting changes.
+  - Given an approved preview, when executed, then a `REPLAY_EXECUTED` audit event fires with the operator + scope + preview-snapshot reference.
+  - Given a replay that would touch data marked SUPPRESSED_DELETED, when previewed, then the orchestrator flags the conflict and refuses to proceed without two-person authorization (per AD-026).
+- **Originating** BR-607, BR-606, BR-703, AD-026
+- **Depends on** P2-ING-001, P2-DEL-003, P2-TWP-001
+- **Tier** CRITICAL · **Size** L · **Owner** Ingestion
+
+---
+
+### Epic CAN — Canonical Eligibility Phase 2
+
+#### P2-CAN-001 — Operational history window enforcement (AD-005)
+- **As** the Data Engineering squad
+  **I want** an operational-history retention policy keeping ≤ 90 days of `member_history` rows in AlloyDB; older history lives only in BigQuery
+  **So that** AD-005 holds and the operational store stays performance-bounded.
+- **AC**
+  - Given a `member_history` row older than `OPERATIONAL_HISTORY_DAYS` (default 90), when the retention job runs, then it is deleted from AlloyDB only after BigQuery confirms the corresponding row exists (read-after-replicate guard).
+  - Given a query for historical state at T-180 days, when issued, then it succeeds via the BigQuery analytical surface (per AD-015).
+  - Given the retention job, when audited, then it emits a `OPERATIONAL_HISTORY_PURGE` event with row counts per run.
+- **Originating** AD-005, AD-015, BR-204
+- **Depends on** P1-CAN-003, P1-DAT-001
+- **Tier** CRITICAL · **Size** M · **Owner** Data Engineering
+
+---
+
+### Epic TOK — Tokenization Contract Enforcement
+
+#### P2-TOK-001 — Synchronous-detok-only contract enforcement (AD-010)
+- **As** the Vault squad
+  **I want** the TokenizationService surface to expose only synchronous per-record `detokenize` (no batch surface for v1) with a CI gate verifying no batch endpoint exists
+  **So that** AD-010 holds and the per-record audit-emission contract is unbroken.
+- **AC**
+  - Given the deployed TokenizationService, when its API surface is enumerated, then no batch detok endpoint exists.
+  - Given a CI lint, when run, then any code path requesting > 1 detok per call (e.g., a list-iteration helper that bypasses the audit emission) fails the build.
+  - Given an attempted batch caller (test injection), when it makes a multi-token request via the synchronous endpoint, then each detok is audited individually (no audit batching).
+- **Originating** AD-010, BR-502, BR-501
+- **Depends on** P1-TOK-001
+- **Tier** CRITICAL · **Size** S · **Owner** Vault
+
+---
+
 ### Epic REC — Reconciliation Jobs
 
 #### P2-REC-001 — Cross-stage reconciliation (rows-in vs. rows-out)
@@ -359,7 +435,7 @@ All v1 BRs satisfied. System is production-defensible.
 - **AC**
   - Given the bucket, when its retention policy is queried, then `effective` is `true` and `retention_period` is set to the BR-503 minimum (≥ 6 years).
   - Given an attempt to reduce retention, when made, then GCS denies (Bucket Lock prevents).
-- **Originating** ADR-0008, BR-503, BR-504
+- **Originating** ADR-0008, AD-014, BR-503, BR-504
 - **Depends on** P0-DAT-005, P1-AUD-003
 - **Tier** CRITICAL · **Size** S · **Owner** Audit
 
@@ -386,7 +462,7 @@ All v1 BRs satisfied. System is production-defensible.
   - Given a member-submitted Right of Access request, when validated, then the assembly job runs and produces a deliverable in member-chosen format (PDF, secure download, etc.).
   - Given the SLA window (default 30 days; configurable), when fulfillment exceeds the threshold, then a P1 alert fires.
   - Given a delivery, when audited, then the audit event records the format, delivery channel, and acknowledgment.
-- **Originating** BR-903
+- **Originating** BR-903, AD-029
 - **Depends on** P0-ADR-002, P1-UX-003
 - **Tier** CRITICAL · **Size** XL · **Owner** Member Rights
 
@@ -592,6 +668,78 @@ All v1 BRs satisfied. System is production-defensible.
 - **Depends on** P0-ADR-001, P0-COM-007
 - **Tier** CRITICAL · **Size** L · **Owner** Privacy Officer
 
+#### P2-COM-007 — Breach risk assessment methodology (BR-1002)
+- **As** the Privacy Officer
+  **I want** a documented breach risk assessment methodology — the four-factor analysis (nature/extent of PHI, unauthorized recipient, was PHI actually viewed, mitigation extent) — codified into a workflow
+  **So that** BR-1002 holds: every suspected incident gets a structured risk-of-compromise determination, not an ad-hoc judgment call.
+- **AC**
+  - Given a suspected incident, when triaged, then the four-factor analysis is performed and recorded with rationale per factor + final low-probability-of-compromise determination.
+  - Given the determination, when "low probability" is concluded, then counsel co-signs the rationale before the determination is final (no notification).
+  - Given the methodology, when reviewed, then it is in the documentation retention store with version history + counsel sign-off.
+- **Originating** BR-1002, BR-1006
+- **Depends on** P2-COM-001, P0-COM-001, P0-COM-009
+- **Tier** CRITICAL · **Size** M · **Owner** Privacy Officer
+
+#### P2-COM-008 — Breach notification content templates (BR-1003)
+- **As** the Privacy Officer + counsel
+  **I want** counsel-approved notification templates: individual notice, HHS notice, media notice, BA-to-CE notice — each carrying the §164.404(c) required elements
+  **So that** BR-1003 holds: when a breach is determined, notification content is not drafted under time pressure.
+- **AC**
+  - Given each template, when reviewed, then it carries: brief description of incident, types of PHI involved, steps individuals should take, what the entity is doing, contact information.
+  - Given counsel sign-off, when stored, then templates are in the documentation retention store with version history.
+  - Given a tabletop exercise (P2-COM-003), when run, then templates are filled in within drill bounds without requiring counsel to re-author from scratch.
+- **Originating** BR-1003
+- **Depends on** P2-COM-001, P0-COM-009
+- **Tier** CRITICAL · **Size** M · **Owner** Privacy Officer
+
+#### P2-COM-009 — Individual notification timeline + tracking (BR-1004)
+- **As** the Privacy Officer
+  **I want** an individual-notification workflow that fires within `BREACH_NOTIFICATION_INDIVIDUAL_DAYS` (60) of breach determination + tracks delivery per affected individual
+  **So that** BR-1004 + §164.404(b) hold: the 60-day clock is mechanically tracked, not estimated.
+- **AC**
+  - Given a breach determination at time T, when notification is generated, then the individual notice is dispatched to each affected individual via their on-file contact channel (with confidential-communications preferences honored per BR-907).
+  - Given any individual notification not confirmed delivered within `BREACH_NOTIFICATION_INDIVIDUAL_DAYS - 7`, when monitored, then a P0 alert fires for Privacy Officer.
+  - Given undeliverable notifications (≥ 10 individuals), when triggered, then substitute notice (P2-COM-010) is invoked.
+- **Originating** BR-1004
+- **Depends on** P2-COM-007, P2-COM-008, P2-MR-002
+- **Tier** CRITICAL · **Size** L · **Owner** Privacy Officer
+
+#### P2-COM-010 — Substitute notice (BR-1005)
+- **As** the Privacy Officer
+  **I want** substitute notice mechanics implemented: web posting on the entity's homepage for `SUBSTITUTE_NOTICE_POSTING_DAYS` (90) + toll-free number for `SUBSTITUTE_NOTICE_TOLL_FREE_DAYS` (90), triggered when individual notice fails for ≥ `SUBSTITUTE_NOTICE_THRESHOLD_INDIVIDUALS` (10)
+  **So that** BR-1005 + §164.404(d)(2) hold.
+- **AC**
+  - Given a breach with ≥ 10 undeliverable individual notifications, when the substitute-notice trigger fires, then a homepage banner is auto-posted (or workflow-flagged for posting) with the breach-notice content.
+  - Given the toll-free number, when set up, then it is staffed during business hours for the posting period and call records are retained per BR-501.
+  - Given the substitute-notice posting, when its 90-day window elapses, then the banner is auto-removed and the event is audited.
+- **Originating** BR-1005
+- **Depends on** P2-COM-009
+- **Tier** CRITICAL · **Size** M · **Owner** Privacy Officer
+
+#### P2-COM-011 — HHS notification + annual rollup (BR-1007)
+- **As** the Privacy Officer
+  **I want** the HHS notification pipeline: ≥ `HHS_NOTIFICATION_THRESHOLD_INDIVIDUALS` (500) → notify HHS within `BREACH_NOTIFICATION_HHS_DAYS` (60); < 500 → annual rollup by `HHS_ANNUAL_ROLLUP_DEADLINE` (Feb 28)
+  **So that** BR-1007 + §164.408 hold.
+- **AC**
+  - Given a breach affecting ≥ 500 individuals, when determined, then HHS Secretary is notified within 60 days via the HHS Breach Reporting Portal with the documented submission record retained.
+  - Given a breach affecting < 500 individuals, when determined, then it is queued for the annual rollup and the rollup is submitted by Feb 28 of the following year.
+  - Given the annual rollup, when reviewed, then it includes every sub-500 breach from the prior calendar year with the §164.408(c) required elements.
+- **Originating** BR-1007
+- **Depends on** P2-COM-007, P2-COM-008
+- **Tier** CRITICAL · **Size** M · **Owner** Privacy Officer
+
+#### P2-COM-012 — HITECH BA notification — outbound + inbound (BR-1008)
+- **As** the Privacy Officer
+  **I want** outbound BA-to-CE notification when Lore (acting as BA) experiences a breach, and inbound handling when a partner BA notifies Lore (acting as CE), within `BA_BREACH_NOTIFICATION_DAYS` (60)
+  **So that** BR-1008 + §164.410 hold in both directions.
+- **AC**
+  - Given a Lore-side breach affecting partner data (Lore as BA), when determined, then notification to the affected partner CE is dispatched within 60 days with the BA-notification template (P2-COM-008 variant).
+  - Given an inbound partner-BA notification (a partner reports a breach affecting Lore-controlled data), when received, then it is logged + Lore's CE-side breach assessment workflow (P2-COM-007) initiates with the partner's notice as input evidence.
+  - Given the workflow, when reviewed, then it covers Lore-as-BA AND Lore-as-CE flows distinctly.
+- **Originating** BR-1008
+- **Depends on** P2-COM-007, P2-COM-008, P1-COM-002
+- **Tier** CRITICAL · **Size** M · **Owner** Privacy Officer
+
 ---
 
 ### Epic UX — UX Phase 2
@@ -659,9 +807,9 @@ All v1 BRs satisfied. System is production-defensible.
 
 | Track | Critical stories | Important / Supportive |
 |-------|------------------|------------------------|
-| Engineering | P2-SPK-001..005, P2-REV-001..003, P2-BFP-001..005, P2-DEL-001..004, P2-REC-001, P2-DRF-002 (IMPORTANT), P2-ANC-001..002, P2-MR-001..003, P2-MR-005..007, P2-UMR-001, P2-TWP-001..002, P2-BRR-001 | P2-REV-004, P2-DEL-005, P2-REC-002, P2-DRF-001, P2-MR-004, P2-MR-008, P2-UMR-002 |
+| Engineering | P2-SPK-001..006, P2-REV-001..003, P2-BFP-001..005, P2-DEL-001..004, P2-ING-001..002, P2-CAN-001, P2-TOK-001, P2-REC-001, P2-ANC-001..002, P2-MR-001..003, P2-MR-005..007, P2-UMR-001, P2-TWP-001..002, P2-BRR-001 | P2-REV-004, P2-DEL-005, P2-REC-002, P2-DRF-001, P2-DRF-002, P2-MR-004, P2-MR-008, P2-UMR-002 |
 | Security | P2-TWP-001..002, P2-DEL-002, P2-REV-003, P2-ANC-001..002 | P0-SEC-003 (recurring) |
-| Compliance | P2-COM-001..006, P2-MR-004, P2-ADV-001 | — |
+| Compliance | P2-COM-001..012, P2-MR-004, P2-ADV-001 | — |
 | UX | P2-UX-003 | P2-UX-002 |
 | Infrastructure | P2-ANC-001 | — |
 
