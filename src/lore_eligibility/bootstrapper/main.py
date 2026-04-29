@@ -21,14 +21,13 @@ from lore_eligibility.bootstrapper.settings import get_settings
 def create_app() -> FastAPI:
     """Build the FastAPI application instance.
 
+    Startup configuration validation is delegated to
+    ``bootstrapper.config_validation.validate_settings``, which will
+    raise ``ConfigurationError`` in staging or production if any
+    insecure-config rule trips.
+
     Returns:
         Configured FastAPI app with /health and metadata.
-
-    Raises:
-        ConfigurationError: If startup configuration validation fails
-            in staging or production. See
-            ``bootstrapper.config_validation.validate_settings`` for
-            the rules.
     """
     settings = get_settings()
 
