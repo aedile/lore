@@ -150,3 +150,25 @@ dev-down: ## Stop and remove development containers
 .PHONY: dev-db-only
 dev-db-only: ## Bring up postgres + pgbouncer with host port 5432 exposed (for host-side pytest)
 	docker compose -f docker-compose.yml -f docker-compose.dev-db.yml up -d postgres pgbouncer
+
+# ---------------------------------------------------------------------------
+# prototype-test — run the prototype/ test suite (overrides production
+# coverage gate; prototype/ runs under the relaxed harness profile)
+# ---------------------------------------------------------------------------
+.PHONY: prototype-test
+prototype-test: ## Run prototype/ tests (relaxed harness; coverage gate skipped)
+	poetry run pytest prototype/tests/ -o addopts="--tb=short"
+
+# ---------------------------------------------------------------------------
+# prototype-demo — run the full panel demo against the running dev DB
+# ---------------------------------------------------------------------------
+.PHONY: prototype-demo
+prototype-demo: ## Run the full panel demo (requires `make dev-db-only` first)
+	poetry run python -m prototype demo
+
+# ---------------------------------------------------------------------------
+# prototype-h2 — run the H2 Splink snippet (panel hands-on artifact)
+# ---------------------------------------------------------------------------
+.PHONY: prototype-h2
+prototype-h2: ## Run the H2 Splink near-duplicate detection snippet
+	poetry run python -m prototype.snippets.h2_splink_demo
