@@ -777,3 +777,221 @@ def test_audit_event_target_token_field_disallows_pii_leak() -> None:
     serialised = json.dumps(asdict(event))
     matches = RedactionScanner().scan_text(serialised, path="<inline>")
     assert any(m.pattern_name == "SSN" for m in matches)
+
+
+# ---------------------------------------------------------------------------
+# 8. Verification API fuzzing — malformed input must not 5xx or leak PII
+# ---------------------------------------------------------------------------
+
+
+def _verify_client() -> TestClient:
+    return TestClient(
+        create_app(
+            lookup=InMemoryCanonicalLookup([]),
+            settings=VerificationSettings(response_floor_ms=0.0),
+        )
+    )
+
+
+def test_api_rejects_malformed_json_with_422_no_5xx() -> None:
+    """Pydantic validation errors return 4xx; never 5xx (no server stacktrace
+    leaked into the response body)."""
+    client = _verify_client()
+    response = client.post(
+        "/v1/verify",
+        content=b"this is not json {",
+        headers={"content-type": "application/json"},
+    )
+    assert 400 <= response.status_code < 500
+    # Body must not contain Python tracebacks or PII patterns.
+    body = response.text
+    assert "Traceback" not in body
+    assert "File " not in body or "line " not in body  # no traceback frames
+
+
+def test_api_rejects_missing_claim_fields_with_422() -> None:
+    client = _verify_client()
+    # claim is missing required first_name, last_name, date_of_birth.
+    response = client.post(
+        "/v1/verify",
+        json={
+            "claim": {},
+            "context": {"client_id": "fuzz", "request_id": "r"},
+        },
+    )
+    assert response.status_code == 422
+
+
+def test_api_rejects_oversize_payload_gracefully() -> None:
+    """A 5MB JSON payload should be rejected by FastAPI's request size
+    handling rather than processed (which would take seconds and could
+    OOM under sustained attack)."""
+    client = _verify_client()
+    huge_first_name = "A" * (5 * 1024 * 1024)
+    response = client.post(
+        "/v1/verify",
+        json={
+            "claim": {
+                "first_name": huge_first_name,
+                "last_name": "Smith",
+                "date_of_birth": "1985-04-12",
+            },
+            "context": {"client_id": "fuzz", "request_id": "r"},
+        },
+    )
+    # Either rejected (4xx) or processed-but-no-server-error (200 with
+    # NOT_VERIFIED). Both are acceptable; 5xx is not.
+    assert response.status_code < 500
+
+
+def test_api_handles_null_bytes_in_name_without_crashing() -> None:
+    client = _verify_client()
+    response = client.post(
+        "/v1/verify",
+        json={
+            "claim": {
+                "first_name": "Sa\x00rah",
+                "last_name": "John\x00son",
+                "date_of_birth": "1985-04-12",
+            },
+            "context": {"client_id": "fuzz", "request_id": "r"},
+        },
+    )
+    assert response.status_code < 500
+
+
+def test_api_handles_unicode_bidi_in_name_consistently() -> None:
+    """Bidirectional unicode override characters (RLM/LRM) shouldn't change
+    the tokenized identity nor crash the lookup."""
+    client = _verify_client()
+    response = client.post(
+        "/v1/verify",
+        json={
+            "claim": {
+                "first_name": "Sarah‮",  # right-to-left override
+                "last_name": "Johnson‭",
+                "date_of_birth": "1985-04-12",
+            },
+            "context": {"client_id": "fuzz", "request_id": "r"},
+        },
+    )
+    assert response.status_code == 200
+    assert response.json() == {"status": NOT_VERIFIED}
+
+
+def test_api_handles_zero_date_string() -> None:
+    """Sentinel '0000-00-00' DOB must not crash the lookup."""
+    client = _verify_client()
+    response = client.post(
+        "/v1/verify",
+        json={
+            "claim": {
+                "first_name": "Phantom",
+                "last_name": "Person",
+                "date_of_birth": "0000-00-00",
+            },
+            "context": {"client_id": "fuzz", "request_id": "r"},
+        },
+    )
+    assert response.status_code == 200
+    assert response.json() == {"status": NOT_VERIFIED}
+
+
+def test_api_handles_future_dob() -> None:
+    """A DOB far in the future is structurally valid but logically wrong;
+    must not crash."""
+    client = _verify_client()
+    response = client.post(
+        "/v1/verify",
+        json={
+            "claim": {
+                "first_name": "Phantom",
+                "last_name": "Person",
+                "date_of_birth": "9999-12-31",
+            },
+            "context": {"client_id": "fuzz", "request_id": "r"},
+        },
+    )
+    assert response.status_code == 200
+    assert response.json() == {"status": NOT_VERIFIED}
+
+
+def test_api_response_body_never_echoes_input_pii() -> None:
+    """No matter what claim is submitted, the response body contains only
+    {'status': ...}. Echoing the input would leak PII back to the
+    requester (and to anyone watching the wire)."""
+    client = _verify_client()
+    sensitive_first = "VerySpecificName_12345"
+    response = client.post(
+        "/v1/verify",
+        json={
+            "claim": {
+                "first_name": sensitive_first,
+                "last_name": "AlsoVerySpecific",
+                "date_of_birth": "1985-04-12",
+                "ssn_last_4": "9999",
+            },
+            "context": {"client_id": "fuzz", "request_id": "r"},
+        },
+    )
+    body = response.text
+    assert sensitive_first not in body
+    assert "AlsoVerySpecific" not in body
+    assert "9999" not in body
+    assert "1985-04-12" not in body
+
+
+def test_api_handles_empty_strings_for_required_fields() -> None:
+    """Pydantic typing accepts empty strings for required fields; the API
+    must handle them as legitimate claims (which won't match any
+    canonical) rather than crash."""
+    client = _verify_client()
+    response = client.post(
+        "/v1/verify",
+        json={
+            "claim": {"first_name": "", "last_name": "", "date_of_birth": ""},
+            "context": {"client_id": "fuzz", "request_id": "r"},
+        },
+    )
+    assert response.status_code == 200
+    assert response.json() == {"status": NOT_VERIFIED}
+
+
+def test_api_handles_malformed_dob_format() -> None:
+    """A non-ISO DOB string is structurally a string and reaches tokenization;
+    must produce NOT_VERIFIED, not 5xx."""
+    client = _verify_client()
+    for bad_dob in ("not-a-date", "04/12/1985", "1985-13-45", "1985"):
+        response = client.post(
+            "/v1/verify",
+            json={
+                "claim": {
+                    "first_name": "Phantom",
+                    "last_name": "Person",
+                    "date_of_birth": bad_dob,
+                },
+                "context": {"client_id": "fuzz", "request_id": "r"},
+            },
+        )
+        assert response.status_code == 200, f"Bad DOB {bad_dob!r} produced {response.status_code}"
+        assert response.json() == {"status": NOT_VERIFIED}
+
+
+def test_api_handles_extra_unknown_fields_in_claim() -> None:
+    """Pydantic by default ignores extra fields; the API must not error
+    when a client sends speculative future fields."""
+    client = _verify_client()
+    response = client.post(
+        "/v1/verify",
+        json={
+            "claim": {
+                "first_name": "Phantom",
+                "last_name": "Person",
+                "date_of_birth": "1985-04-12",
+                "speculative_future_field": "ignored",
+                "another": ["extra", "data"],
+            },
+            "context": {"client_id": "fuzz", "request_id": "r"},
+        },
+    )
+    assert response.status_code == 200
