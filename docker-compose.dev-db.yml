@@ -1,0 +1,16 @@
+---
+# =============================================================================
+# docker-compose.dev-db.yml — host-port exposure for db-only dev mode
+#
+# Used by `make dev-db-only` to bring up postgres + pgbouncer with the
+# pgbouncer port mapped to host:5432 so a host-side process (pytest,
+# psql, an IDE-attached uvicorn) can reach the database.
+#
+# NOT loaded by default. Default `docker compose up` keeps the database
+# internal-only. Use only when you explicitly need host access.
+# =============================================================================
+
+services:
+  pgbouncer:
+    ports:
+      - "5432:5432"

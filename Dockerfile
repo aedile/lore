@@ -62,5 +62,16 @@ USER lore
 
 EXPOSE 8000
 
+# ---------------------------------------------------------------------------
+# HEALTHCHECK — uses python's urllib so we don't have to install curl/wget.
+# Hits /health every 30s. Three failures (90s) marks the container unhealthy.
+# start-period gives the app time to run alembic migrations before checks
+# begin counting against retries.
+# ---------------------------------------------------------------------------
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD python -c "import urllib.request,sys; \
+sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health',timeout=3).status==200 else 1)" \
+    || exit 1
+
 ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["uvicorn", "lore_eligibility.bootstrapper.main:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]

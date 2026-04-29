@@ -116,17 +116,37 @@ doc-audit: ## Verify README.md accuracy — checks for stale phrases and broken 
 	poetry run python scripts/doc_audit.py
 
 # ---------------------------------------------------------------------------
-# dev — start development stack (PostgreSQL) and run app
+# dev — start development stack (postgres + pgbouncer + app with --reload)
+#
+# Runs the full stack inside docker compose. The override file
+# (docker-compose.override.yml) adds --reload to the app command and
+# bind-mounts src/ for hot reload. The entrypoint.sh waits for postgres
+# and runs `alembic upgrade head` before starting uvicorn.
+#
+# Foreground: ctrl-C to stop. Use `make dev-down` to clean up volumes.
 # ---------------------------------------------------------------------------
 .PHONY: dev
-dev: ## Start development stack via docker-compose and run app with --reload
-	docker-compose up -d postgres pgbouncer
-	poetry run alembic upgrade head
-	poetry run uvicorn lore_eligibility.bootstrapper.main:app --reload
+dev: ## Start development stack (foreground): postgres + pgbouncer + app with hot-reload
+	docker compose up
+
+# ---------------------------------------------------------------------------
+# dev-detached — same as dev but in background
+# ---------------------------------------------------------------------------
+.PHONY: dev-detached
+dev-detached: ## Start development stack (background)
+	docker compose up -d
 
 # ---------------------------------------------------------------------------
 # dev-down — stop development services
 # ---------------------------------------------------------------------------
 .PHONY: dev-down
-dev-down: ## Stop docker-compose development services
-	docker-compose down
+dev-down: ## Stop and remove development containers
+	docker compose down
+
+# ---------------------------------------------------------------------------
+# dev-db-only — bring up only postgres + pgbouncer (for running pytest
+# integration tests on the host that need a live DB)
+# ---------------------------------------------------------------------------
+.PHONY: dev-db-only
+dev-db-only: ## Bring up postgres + pgbouncer with host port 5432 exposed (for host-side pytest)
+	docker compose -f docker-compose.yml -f docker-compose.dev-db.yml up -d postgres pgbouncer
