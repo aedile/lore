@@ -118,8 +118,17 @@ class DemoResult:
 
 
 def setup_db(conn: Any) -> None:
-    """Apply A5 schema to a fresh Postgres instance."""
+    """Apply A5 schema. Idempotent: drops the prototype tables first so
+    the demo can re-run against the same Postgres instance."""
     cur = conn.cursor()
+    cur.execute(
+        """
+        DROP TABLE IF EXISTS
+            review_queue, match_decision, member_history,
+            partner_enrollment, deletion_ledger, canonical_member
+        CASCADE
+        """
+    )
     cur.execute(Path(SCHEMA_PATH).read_text())
     conn.commit()
 

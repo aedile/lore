@@ -23,8 +23,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_FIXTURES = REPO_ROOT / "prototype" / "fixtures"
 DEFAULT_OUTPUT = REPO_ROOT / "prototype" / "data"
 
-# Default DSN matches the docker-compose-dev-db.yml service.
-_DEFAULT_DSN = "postgresql://lore_eligibility:lore_eligibility@127.0.0.1:5432/lore_eligibility"
+# Default DSN matches the `prototype-pg-up` Makefile target — a stock
+# postgres:16-alpine container on port 5440 with user/password = postgres.
+# Override via DATABASE_URL or --dsn for any other environment.
+_DEFAULT_DSN = "postgresql://postgres:postgres@127.0.0.1:5440/lore_eligibility"
 
 
 def _print_section(title: str) -> None:
@@ -82,6 +84,10 @@ def _cli() -> int:
     _print_section("PRD #3 — Tier histogram (day 1)")
     for tier in (TIER_1, TIER_2, TIER_3, TIER_4):
         print(f"  {tier:30s} {result.day1.tier_histogram.get(tier, 0):5d}")
+
+    _print_section("PRD #3 — Tier histogram (day 2)")
+    for tier in (TIER_1, TIER_2, TIER_3, TIER_4):
+        print(f"  {tier:30s} {result.day2.tier_histogram.get(tier, 0):5d}")
 
     _print_section("PRD #7 — Deletion + day-2 SUPPRESSED_DELETED")
     print(f"  Deleted member_id    = {result.deletion_target_member_id}")

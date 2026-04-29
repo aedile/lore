@@ -39,16 +39,26 @@ poetry run pip install -r prototype/requirements.txt
 ## Run the end-to-end demo
 
 ```bash
-# 1. Bring up the dev Postgres (host port 5432).
-make dev-db-only
+# 1. Spawn a one-shot Postgres for the prototype on host port 5440.
+#    (Lighter than `make dev-db-only`, which expects production-style
+#    secret-file provisioning.)
+make prototype-pg-up
 
 # 2. Run the full panel demo. Prints a section per PRD acceptance criterion;
 #    exits 1 if the audit chain breaks or redaction scanner hits anything.
 make prototype-demo
 
+# 3. Tear down when finished.
+make prototype-pg-down
+
 # Optional: just the Splink near-duplicate snippet (panel hands-on artifact).
 make prototype-h2
 ```
+
+The `make prototype-demo` target runs ~4-7 seconds and prints a section
+per PRD acceptance criterion (#1 day-1 pipeline, #2 day-2 pipeline + SCD2
++ suppression, #3 tier histogram, #5 audit chain validation, #6 redaction
+scan, #7 deletion + suppression). Exits 1 if anything fails.
 
 ## Tests
 

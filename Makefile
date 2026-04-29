@@ -160,10 +160,40 @@ prototype-test: ## Run prototype/ tests (relaxed harness; coverage gate skipped)
 	poetry run pytest prototype/tests/ -o addopts="--tb=short"
 
 # ---------------------------------------------------------------------------
-# prototype-demo — run the full panel demo against the running dev DB
+# prototype-pg-up — spawn a one-shot Postgres for the prototype demo
+#
+# Lightweight alternative to `make dev-db-only`: stock postgres:16-alpine
+# on host port 5440 with username/password = postgres, no secrets file
+# provisioning required. Removed automatically on stop (--rm).
+# ---------------------------------------------------------------------------
+.PHONY: prototype-pg-up
+prototype-pg-up: ## Spawn one-shot Postgres for the prototype demo (port 5440)
+	@docker rm -f lore-prototype-pg 2>/dev/null || true
+	docker run -d --rm --name lore-prototype-pg -p 5440:5432 \
+		-e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=lore_eligibility \
+		postgres:16-alpine
+	@echo "Waiting for Postgres to be ready on 127.0.0.1:5440..."
+	@for i in $$(seq 1 30); do \
+		if docker exec lore-prototype-pg pg_isready -U postgres >/dev/null 2>&1; then \
+			echo "Postgres ready"; exit 0; \
+		fi; sleep 1; \
+	done; \
+	echo "Postgres did not become ready in 30s" >&2; exit 1
+
+# ---------------------------------------------------------------------------
+# prototype-pg-down — stop the prototype demo Postgres container
+# ---------------------------------------------------------------------------
+.PHONY: prototype-pg-down
+prototype-pg-down: ## Stop the prototype demo Postgres container
+	-docker stop lore-prototype-pg 2>/dev/null
+
+# ---------------------------------------------------------------------------
+# prototype-demo — run the full panel demo
+# Requires `make prototype-pg-up` first (or any Postgres reachable via
+# the DATABASE_URL env var).
 # ---------------------------------------------------------------------------
 .PHONY: prototype-demo
-prototype-demo: ## Run the full panel demo (requires `make dev-db-only` first)
+prototype-demo: ## Run the full panel demo (requires `make prototype-pg-up` first)
 	poetry run python -m prototype demo
 
 # ---------------------------------------------------------------------------
