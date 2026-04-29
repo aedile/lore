@@ -127,6 +127,8 @@ external = ["DOC", "BLE001"]
     "RUF001", "RUF002", "RUF003", "RUF012",
     "PT018",
     "E501",
+    # B008 — FastAPI's canonical Depends() pattern in argument defaults.
+    "B008",
 ]
 
 # ---------------------------------------------------------------------------
