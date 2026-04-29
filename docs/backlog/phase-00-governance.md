@@ -31,6 +31,8 @@ ADR-0001 is the architectural decision record for this phase.
 | T0.6 | IN PROGRESS | Layer 6 — docs/adr/ADR-0001 + ADR-template, docs/RETRO_LOG, docs/backlog/phase-00, docs/spec-challenges + retros READMEs, ARCHITECTURE/BRD/ASSUMPTIONS skeletons, CHANGELOG, README | All scaffold docs land; ADR-0001 records the harness decision. |
 | T0.7 | TODO | Validate harness end-to-end: `poetry install`, `poetry run pytest tests/unit/`, `poetry run pre-commit run --all-files`, `poetry check --lock` | All gates green on the local machine. |
 | T0.8 | TODO | Write Phase 00 retrospective to `docs/retros/phase-00.md`; update RETRO_LOG. | Retro file references advisories raised during the migration. |
+| T0.9 | DONE | Pre-BRD harness hardening — fix make dev (broken docker network), Dockerfile HEALTHCHECK, PII-redacting structlog, PII-in-fixtures gate, auth-coverage gate, production-config startup validation. See PR #1 (folder merge), PR #2 (HIPAA hardening). | All committed via PRs with audit trail; HIPAA_POSTURE.md inventories live vs stubbed vs deferred controls. |
+| T0.10 | TODO | Enable branch protection on `main`. Confirmed via `gh api` to be HTTP 404 currently. CONSTITUTION assumes it is on. | Required status checks include `Detect Changes`, `Security Scan (gitleaks)`, `Documentation Gate`, and (when Python work resumes) `Lint`, `Unit Tests`. |
 
 ---
 
