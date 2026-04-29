@@ -136,7 +136,7 @@ else
     RESULTS+=("{\"gate\":\"integration-tests\",\"status\":\"SKIP\",\"duration_s\":0}")
 fi
 
-# Mock-free integration test enforcement (ADR-0031 / T50.5)
+# Mock-free integration test enforcement (mock-free integration policy)
 if find tests/integration/ -name 'test_*.py' -print -quit 2>/dev/null | grep -q .; then
     run_gate "integration-mock-gate" "python3 scripts/check_integration_mocks.py tests/integration/"
 else

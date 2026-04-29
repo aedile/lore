@@ -147,7 +147,7 @@ When reviewing multiple documents, group findings by urgency:
 
 ## Guidelines
 
-1. **Be specific**: "Line 47 references `config_validation.py` which was refactored in Phase 36" is useful. "Some references may be stale" is not.
+1. **Be specific**: "Line 47 references `config_validation.py` which was refactored in Phase NN" is useful. "Some references may be stale" is not.
 2. **Verify before flagging**: Don't assume a reference is stale — check the codebase. `Grep` and `Glob` are your friends.
 3. **Respect intentional historical content**: Some documents (RETRO_LOG, ADRs) are intentionally historical. Don't flag them as "stale" — flag them as "Historical" lifecycle status.
 4. **Prioritize accuracy over style**: A technically accurate document with rough prose is better than a polished document with wrong information.

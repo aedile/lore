@@ -67,7 +67,6 @@ package name, Python 3.12, HIPAA-aligned defaults.
 | Prometheus / Grafana / Alertmanager | Observability stack not selected for Phase 00; can add later when the brief's "operational observability" requirement is implemented |
 | Redis | No task queue yet; bulk loads can be synchronous until proven otherwise |
 | ML optional dep groups (`teacher-mlx`, `teacher-ollama`, `trainer`, `serving`, `evaluator`) | No ML in this deliverable's scope |
-| `conclave/` reference subdirectory | A2Tensor-specific reference impl |
 | Pre-existing 58-phase backlog files | `lore-eligibility` starts at Phase 00 fresh |
 | GPU compose variant (`docker-compose.gpu.yml`) | No GPU workload |
 | ZAP / SBOM / Trivy CI jobs | Require running app; reintroduce when there is a real Docker image and routes to scan |

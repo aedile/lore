@@ -5,7 +5,7 @@
 # codebase. This keeps wall-clock time manageable (target: <30 min on a
 # developer laptop; full codebase would take hours).
 #
-# Target mutation score: >=60% (per CONSTITUTION Priority 4 / Phase 55 gate).
+# Target mutation score: >=60% (per CONSTITUTION Priority 4).
 #
 # Usage:
 #   make mutmut                # via Makefile target
