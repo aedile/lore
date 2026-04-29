@@ -29,7 +29,7 @@ Each story carries:
 
 | File | Phase | Goal |
 |------|-------|------|
-| [phase-00-governance.md](phase-00-governance.md) | Phase 00 (Harness) | Development substrate. Closing tasks tracked there; superseded by Phase 0 below for production. |
+| [phase-00-governance.md](phase-00-governance.md) | Phase 00 (Harness) | Development substrate (T-task format; not part of the production backlog). Closing tasks tracked here; superseded by Phase 0 below for production. |
 | [phase-foundation.md](phase-foundation.md) | Phase 0 — Foundation | Empty production substrate; governance roles designated; open ADRs scoped. |
 | [phase-single-partner.md](phase-single-partner.md) | Phase 1 — Single-Partner E2E | One partner, full pipeline shape, minimal feature surface. |
 | [phase-production-cutover.md](phase-production-cutover.md) | Phase 2 — Production Cutover | All v1 BRs satisfied. System is production-defensible. |
