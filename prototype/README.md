@@ -13,16 +13,18 @@ snippets and the walkthrough document:
 
 | Artifact | Status | Path |
 |---|---|---|
-| A1 — Synthetic data harness | Planned | `synthetic_data.py` |
-| A2 — Format adapter + YAML mapping | Planned | `adapters/` |
-| A3 — DQ engine + profiling | Planned | `dq/` |
-| A4 — Identity resolution (Splink on DuckDB) | Planned | `identity/` |
-| A5 — Canonical Postgres store + state machine | Planned | `canonical/` |
-| A6 — Verification API (FastAPI) | Planned | `verification/` |
-| A7 — Deletion ledger + suppression | Planned | `deletion/` |
-| A8 — Audit emission + tokenization stub | Planned | `audit/`, `tokenization/` |
-| H2 — Cleansing snippets | Planned | `snippets/` |
-| W1 — Walkthrough document | Planned | `docs/walkthrough.md` |
+| A1 — Synthetic data harness | Done | `synthetic_data.py` + `fixtures/` |
+| A2 — Format adapter + YAML mapping | Done | `csv_adapter.py`, `mapping_engine.py`, `mappings/` |
+| A3 — DQ engine + profiling | Done | `dq.py` |
+| A4 — Identity resolution (Splink on DuckDB) | Done | `identity.py` |
+| A5 — Canonical Postgres store + state machine | Done | `canonical/` |
+| A6 — Verification API (FastAPI) | Done | `verification.py`, `tokenization.py` |
+| A7 — Deletion ledger + suppression | Done | `deletion.py` |
+| A8 — Audit emission + tokenization stub | Done | `audit.py`, `vault.py` |
+| H2 — Cleansing snippets | Done | `snippets/h2_splink_demo.py`, `snippets/h2_dedup_query.sql` |
+| W1 — Walkthrough document | Drafted | `docs/walkthrough.md` |
+| Demo runner | Done | `demo.py`, `__main__.py` |
+| End-to-end test | Done | `tests/test_e2e_demo.py` |
 
 ## Install prototype-only dependencies
 
@@ -36,10 +38,16 @@ poetry run pip install -r prototype/requirements.txt
 
 ## Run the end-to-end demo
 
-(Populated as artifacts land.)
-
 ```bash
+# 1. Bring up the dev Postgres (host port 5432).
+make dev-db-only
+
+# 2. Run the full panel demo. Prints a section per PRD acceptance criterion;
+#    exits 1 if the audit chain breaks or redaction scanner hits anything.
 make prototype-demo
+
+# Optional: just the Splink near-duplicate snippet (panel hands-on artifact).
+make prototype-h2
 ```
 
 ## Tests
@@ -49,8 +57,15 @@ The default `pytest` invocation collects only the production test suite under
 gate:
 
 ```bash
+make prototype-test
+# or:
 poetry run pytest prototype/tests/ -o addopts="--tb=short"
 ```
+
+Suite size as of W1: **153 tests, ~8 seconds**. The end-to-end test
+(`tests/test_e2e_demo.py`) runs the full pipeline against a temp Postgres
+spawned by pytest-postgresql and asserts every numbered acceptance criterion
+in `../docs/PROTOTYPE_PRD.md`.
 
 ## Run-dirty profile
 
