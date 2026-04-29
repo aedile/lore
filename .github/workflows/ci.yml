@@ -79,6 +79,22 @@ jobs:
             HEAD="${{ github.sha }}"
           fi
 
+          # On push events, BASE may be unusable in two cases:
+          # 1. github.event.before is the null-SHA (first push of a new branch).
+          # 2. github.event.before is a real SHA but was abandoned by a force-push
+          #    and is no longer fetchable on the runner.
+          # Both manifest as "fatal: bad object" later. Detect both and fall back
+          # to merge-base with main, with empty-tree SHA as final fallback.
+          if [ "$BASE" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$BASE" 2>/dev/null; then
+            git fetch origin main:refs/remotes/origin/main 2>/dev/null || true
+            BASE=$(git merge-base origin/main "$HEAD" 2>/dev/null || true)
+            if [ -z "$BASE" ]; then
+              echo "No merge-base with main; falling back to empty-tree SHA (diffs against everything)."
+              BASE=$(git hash-object -t tree /dev/null)
+            fi
+            echo "Push-event BASE was unusable; using fallback BASE: $BASE"
+          fi
+
           CHANGED=$(git diff --name-only "$BASE" "$HEAD")
           echo "Changed files:"
           echo "$CHANGED"
