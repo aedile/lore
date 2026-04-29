@@ -65,10 +65,17 @@ def test_every_non_exempt_route_has_auth_dependency() -> None:
     app = create_app()
     api_routes = [r for r in app.routes if isinstance(r, APIRoute)]
 
+    # The gate has nothing to assert against if the app has no APIRoutes
+    # at all — fail loudly so the test cannot pass vacuously after a
+    # router-registration regression.
+    assert api_routes, "create_app() returned no APIRoutes; auth gate cannot run"
+
     violations: list[str] = []
+    audited = 0
     for route in api_routes:
         if route.path in AUTH_EXEMPT_ROUTES:
             continue
+        audited += 1
         if not _route_is_authenticated(route):
             violations.append(f"{route.path} (methods={sorted(route.methods or set())})")
 
@@ -78,6 +85,10 @@ def test_every_non_exempt_route_has_auth_dependency() -> None:
         "(e.g. Depends(get_current_operator)) or add the path to "
         "AUTH_EXEMPT_ROUTES with a documented justification:\n  " + "\n  ".join(violations)
     )
+    # Sanity: total APIRoutes equals exempt audited + audited non-exempt,
+    # so we can't accidentally drop routes from the loop.
+    exempt_count = sum(1 for r in api_routes if r.path in AUTH_EXEMPT_ROUTES)
+    assert exempt_count + audited == len(api_routes)
 
 
 @pytest.mark.unit
@@ -100,12 +111,27 @@ def test_auth_exempt_routes_actually_correspond_to_real_routes() -> None:
         f"AUTH_EXEMPT_ROUTES contains paths that no longer exist: {stale}. "
         "Remove them so the exempt list stays accurate."
     )
+    # Every exempt path is either declared on the app or a known builtin —
+    # no third category should ever exist.
+    unaccounted = AUTH_EXEMPT_ROUTES - declared_paths - fastapi_builtins
+    assert unaccounted == set()
+    # And every exempt path must start with "/" — guards against typos like
+    # "health" instead of "/health" silently disabling the gate.
+    assert all(p.startswith("/") for p in AUTH_EXEMPT_ROUTES)
 
 
 @pytest.mark.unit
 def test_health_endpoint_is_exempt() -> None:
-    """Sanity check: /health is in AUTH_EXEMPT_ROUTES."""
+    """Sanity check: /health is in AUTH_EXEMPT_ROUTES and is a real route."""
     assert "/health" in AUTH_EXEMPT_ROUTES
+    # The /health path must be served by the app — otherwise its presence
+    # in the exempt set is dead config, not a real exemption.
+    app = create_app()
+    health_routes = [r for r in app.routes if isinstance(r, APIRoute) and r.path == "/health"]
+    assert len(health_routes) == 1, "Expected exactly one /health APIRoute"
+    # And it must NOT carry an auth dependency — otherwise the exemption
+    # is meaningless. This pins the "exempt = unauthenticated" contract.
+    assert not _route_is_authenticated(health_routes[0])
 
 
 @pytest.mark.unit
@@ -114,3 +140,9 @@ def test_openapi_paths_are_exempt() -> None:
     assert "/openapi.json" in AUTH_EXEMPT_ROUTES
     assert "/docs" in AUTH_EXEMPT_ROUTES
     assert "/redoc" in AUTH_EXEMPT_ROUTES
+    # The exempt set must contain at least these three FastAPI-builtin
+    # documentation paths plus /health — i.e. >= 4 total entries.
+    assert len(AUTH_EXEMPT_ROUTES) >= 4
+    # All three OpenAPI paths must be present together — partial exemption
+    # would leave docs reachable but openapi.json blocked or vice versa.
+    assert {"/openapi.json", "/docs", "/redoc"}.issubset(AUTH_EXEMPT_ROUTES)
