@@ -34,6 +34,16 @@ A single partner, real format, ingested through verification, with the architect
 
 ---
 
+## Phase 1.5 split policy
+
+Phase 1 carries the production-readiness weight of the entire backlog: format adapter, DQ, identity resolution, canonical store, verification API, tokenization, audit, replication, partner onboarding, compliance, UX, DR, and end-to-end test harness — 57 stories across 14 epics. It is the highest-risk burn-down window. Under schedule pressure, the temptation will be to relax exit criteria rather than acknowledge the slip. **The correct response is to split, not to relax.** Splitting Phase 1 into Phase 1 and Phase 1.5 is a planned contingency, not a process violation. Exit criteria as written above remain non-negotiable; the split is the relief valve that keeps them so.
+
+**Trigger.** When half or more of the remaining stories at the end of the phase are blocked or deferred, declare the split. Do not wait for full-phase completion to decide — the trigger fires while there is still time to plan Phase 1.5 cleanly. The Privacy Officer Phase 1 sign-off (P1-COM-005) does not occur until the redefined Phase 1 completes.
+
+**Mechanic.** Stories carrying `Tier CRITICAL` and tied directly to the Phase 1 exit criteria stay in Phase 1. Stories carrying `Tier IMPORTANT` or `Tier SUPPORTIVE` move to Phase 1.5. Phase 1 exit then requires only the CRITICAL set; Phase 1.5 carries the rest plus any new work surfaced during Phase 1 burn-down. The Phase 2 entry gate is gated on Phase 1.5 exit, not on the original Phase 1 boundary. This preserves the phase-gating discipline of AD-018 while making the schedule-vs-scope trade-off explicit and reviewable.
+
+---
+
 ## Epics
 
 | Key | Epic | Description |
