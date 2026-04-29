@@ -202,3 +202,10 @@ prototype-demo: ## Run the full panel demo (requires `make prototype-pg-up` firs
 .PHONY: prototype-h2
 prototype-h2: ## Run the H2 Splink near-duplicate detection snippet
 	poetry run python -m prototype.snippets.h2_splink_demo
+
+# ---------------------------------------------------------------------------
+# prototype-audit-chain — inspect or validate the audit chain JSONL
+# ---------------------------------------------------------------------------
+.PHONY: prototype-audit-chain
+prototype-audit-chain: ## Inspect or validate the audit chain (usage: make prototype-audit-chain ARGS='validate')
+	poetry run python -m prototype audit-chain $(ARGS)

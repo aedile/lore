@@ -55,7 +55,26 @@ def _cli() -> int:
     demo_p.add_argument("--match-high", type=float, default=20.0)
     demo_p.add_argument("--match-review", type=float, default=-18.0)
 
+    chain_p = sub.add_parser("audit-chain", help="Validate or inspect the audit chain JSONL.")
+    chain_p.add_argument("action", choices=["validate", "inspect"])
+    chain_p.add_argument(
+        "path",
+        type=Path,
+        nargs="?",
+        default=DEFAULT_OUTPUT / "audit_chain.jsonl",
+    )
+    chain_p.add_argument(
+        "--event-class",
+        default=None,
+        help="Filter to events whose event_class equals this value.",
+    )
+    chain_p.add_argument(
+        "--last", type=int, default=20, help="Show only the last N events."
+    )
+
     args = parser.parse_args()
+    if args.cmd == "audit-chain":
+        return _audit_chain_cli(args)
     if args.cmd != "demo":
         parser.error(f"unknown command: {args.cmd}")
 
@@ -605,6 +624,55 @@ def _run_performance_demo(
     print(f"    p99 latency = {p99:8.2f} ms")
     if p95 < 200.0:
         print(f"  Within the BRD's BR-404 p95 target of 200 ms by {200.0 - p95:.1f} ms.")
+
+
+def _audit_chain_cli(args: argparse.Namespace) -> int:
+    """`python -m prototype audit-chain {validate|inspect} [path]`.
+
+    validate: walks the chain start-to-end and reports ChainValidationResult.
+    inspect : prints the last N events, optionally filtered by event_class.
+    """
+    import json as _json
+
+    path: Path = args.path
+    if not path.exists():
+        print(f"FAIL: chain file not found: {path}", file=sys.stderr)
+        return 2
+
+    if args.action == "validate":
+        result = AuditChain(path).validate()
+        if result.valid:
+            print(f"PASS: chain is valid; {result.entries_checked} entries checked.")
+            return 0
+        print(
+            f"FAIL: chain broken at line {result.broken_at_line}: {result.error} "
+            f"({result.entries_checked} entries scanned).",
+            file=sys.stderr,
+        )
+        return 1
+
+    # inspect
+    chain = AuditChain(path)
+    entries = list(chain)
+    if args.event_class:
+        entries = [e for e in entries if e.get("event_class") == args.event_class]
+    tail = entries[-args.last :] if args.last > 0 else entries
+
+    print(f"# {len(tail)} of {len(entries)} entr(ies) shown")
+    if args.event_class:
+        print(f"# filtered to event_class={args.event_class!r}")
+    for e in tail:
+        actor = (e.get("actor_role") or "")[:20]
+        outcome = (e.get("outcome") or "")[:12]
+        print(
+            f"{e.get('timestamp', '')}  {e.get('event_class', ''):30s}  "
+            f"actor={actor:20s}  outcome={outcome:12s}  "
+            f"target={e.get('target_token', '')}"
+        )
+        ctx = e.get("context", {})
+        if ctx:
+            print(f"  context = {_json.dumps(ctx, sort_keys=True)[:120]}")
+    return 0
 
 
 if __name__ == "__main__":
