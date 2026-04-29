@@ -74,7 +74,7 @@ package name, Python 3.12, HIPAA-aligned defaults.
 ### Explicit project-specific deltas
 
 - **Python 3.12** (not 3.13). HIPAA-conscious shops typically lag latest;
-  Lore's stack signals (per `DOCUMENTS/TECH_STACK.md`) are conservative.
+  Lore's stack signals (per `docs/TECH_STACK.md`) are conservative.
 - **License = Proprietary** (case-study deliverable).
 - **Mutation testing tool = mutmut** (A2Tensor's choice). Targets
   `shared/security/` (60% threshold) and `bootstrapper/auth.py` (50%

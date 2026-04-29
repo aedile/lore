@@ -6,8 +6,8 @@ This document describes the architectural decomposition of the
 `lore-eligibility` system: module boundaries, data flow, integration
 points, and the rationale behind each.
 
-It is the engineering counterpart to `DOCUMENTS/PROBLEM_BRIEF.md` (problem
-framing) and `DOCUMENTS/BUSINESS_REQUIREMENTS.md` (functional contract).
+It is the engineering counterpart to `docs/PROBLEM_BRIEF.md` (problem
+framing) and `docs/BUSINESS_REQUIREMENTS.md` (functional contract).
 
 ---
 
@@ -59,7 +59,7 @@ contract requested by the case prompt._
 ## Non-Functional Requirements Mapping
 
 _To be authored in Phase 02 with reference to
-`DOCUMENTS/PROBLEM_BRIEF.md` §"Non-Functional Requirements". Each NFR
+`docs/PROBLEM_BRIEF.md` §"Non-Functional Requirements". Each NFR
 must map to an architectural mechanism that delivers it._
 
 ---

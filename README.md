@@ -11,10 +11,10 @@ This repository tracks both the **deliverable** (problem framing, BRD, ARD,
 prototype code) and the **engineering harness** that enforces quality,
 security, and HIPAA-aware PII handling on every change.
 
-- `DOCUMENTS/` — case-study source-of-truth documents (problem brief,
-  tech-stack research, BRD, ARD as they are authored)
-- `docs/` — engineering process docs (ADRs, retros, phase backlogs,
-  spec challenges, runbooks)
+- `docs/` — all committed documentation: problem brief, tech-stack
+  research, BRD, ARD, ADRs, retros, phase backlogs, spec challenges,
+  runbooks
+- `IGNORE/` — local-only research notes and panel context (gitignored)
 - `src/lore_eligibility/` — Python package: `bootstrapper/` (FastAPI app,
   settings, lifecycle), `modules/` (domain — populated post-ARD), `shared/`
   (cross-cutting infrastructure including PII security primitives)

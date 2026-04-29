@@ -215,8 +215,8 @@ plus any test files that import from changed source modules. Static analysis gat
 | `tests/unit/`, `tests/integration/` | Tests | Yes |
 | `docs/adr/`, `docs/retros/` | Decisions & phase retros | Yes |
 | `data/`, `output/`, `logs/`, `.env` | Runtime data / secrets | **No** |
-| `IGNORE/` | Case-study scratch (problem brief, careers research) | **No** |
-| `DOCUMENTS/` | Source-of-truth deliverable docs (problem brief, BRD, ARD, tech-stack research) | Yes |
+| `IGNORE/` | Case-study scratch (research notes, panel context, careers research) | **No** |
+| `docs/` | All committed documentation: problem brief, BRD, ARD, ADRs, retros, runbooks, tech-stack research | Yes |
 
 ### File Placement
 
