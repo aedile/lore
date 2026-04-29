@@ -1,0 +1,5 @@
+# Prototype-only dependencies, kept out of the production-package pyproject.
+# Install with:
+#     poetry run pip install -r prototype/requirements.txt
+
+PyYAML>=6.0,<7.0

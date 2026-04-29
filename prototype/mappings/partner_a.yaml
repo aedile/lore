@@ -1,0 +1,44 @@
+# PARTNER_A mapping — case study prototype A2.
+# Canonical fields are listed under `mapping`. Source column names match
+# prototype/fixtures/partner_a_day1.csv. Field tiers come from the canonical
+# field name (not the source column) since BR-301 is partner-agnostic.
+
+partner_id: PARTNER_A
+format: csv
+
+# PARTNER_A uses US date format. The alternate handles the seeded
+# format_error_short_year scenario from A1 (e.g., "4/12/85").
+date_format: "%m/%d/%Y"
+date_format_alternates:
+  - "%m/%d/%y"
+
+# PARTNER_A sends full SSN; the mapping engine derives ssn_last4 automatically.
+ssn_field: full
+
+mapping:
+  partner_member_id: member_id
+  first_name: FirstName
+  last_name: LastName
+  dob: DOB
+  ssn: SSN
+  street: Street
+  city: City
+  state: State
+  zip: Zip
+  phone: Phone
+  email: Email
+
+# BR-301 field tier assignments (canonical field names).
+field_tiers:
+  partner_member_id: required
+  first_name: required
+  last_name: required
+  dob: required
+  ssn: verification
+  ssn_last4: verification
+  street: verification
+  city: verification
+  state: verification
+  zip: verification
+  phone: enrichment
+  email: enrichment
