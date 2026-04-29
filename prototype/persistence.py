@@ -226,7 +226,9 @@ def _breakdown_to_jsonable(breakdown: dict[str, Any] | None) -> dict[str, Any]:
 def load_canonical_candidates(conn: Any) -> list[CanonicalCandidate]:
     """Read canonical_member + partner_enrollment rows out as ``CanonicalCandidate``s.
 
-    Used by day-2 ingest to populate Tier 1 deterministic lookup.
+    Used by day-2 ingest to populate Tier 1 deterministic lookup. Returns
+    one candidate per canonical_member with all current enrollments
+    aggregated.
     """
     cur = conn.cursor()
     cur.execute(
@@ -251,8 +253,8 @@ def load_canonical_candidates(conn: Any) -> list[CanonicalCandidate]:
         candidates.append(
             CanonicalCandidate(
                 member_id=member_id,
-                last_name=data["name_token"],
-                dob=data["dob_token"],
+                name_token=data["name_token"],
+                dob_token=data["dob_token"],
                 enrollments=data["enrollments"],
             )
         )

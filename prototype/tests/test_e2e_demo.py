@@ -71,7 +71,14 @@ def test_e2e_demo_satisfies_prd_acceptance_criteria(postgresql, tmp_path: Path) 
     assert partner_a_day2.feed_quarantined is False
 
     # ----- PRD #3: Splink demo produces match weights for Tier 2/3/4 cases. -----
-    from prototype.identity import TIER_3
+    from prototype.identity import TIER_1, TIER_3
+
+    # Day 2 must produce TIER_1 matches — this is the Tier-1-against-existing-
+    # canonical path. If 0, the existing_canonical wiring regressed.
+    assert result.day2.tier_histogram.get(TIER_1, 0) >= 100, (
+        f"Day-2 should auto-merge most repeat partner_member_ids via Tier 1; "
+        f"got histogram={result.day2.tier_histogram}"
+    )
 
     total_tier2 = result.day1.tier_histogram.get(TIER_2, 0) + result.day2.tier_histogram.get(
         TIER_2, 0

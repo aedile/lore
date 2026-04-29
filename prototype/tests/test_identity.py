@@ -82,7 +82,8 @@ def test_tier_1_fires_when_partner_enrollment_and_identity_match() -> None:
     }
     new_record = map_row(new_row, mapping)
     existing = [
-        CanonicalCandidate(
+        CanonicalCandidate.from_plaintext(
+            first_name="Sarah",
             member_id="canon-001",
             last_name="johnson",  # normalized
             dob="1985-04-12",
@@ -106,7 +107,8 @@ def test_tier_1_does_not_fire_on_partner_mismatch() -> None:
         mapping,
     )
     existing = [
-        CanonicalCandidate(
+        CanonicalCandidate.from_plaintext(
+            first_name="Sarah",
             member_id="canon-001",
             last_name="johnson",
             dob="1985-04-12",
@@ -131,7 +133,8 @@ def test_tier_1_does_not_fire_on_last_name_mismatch() -> None:
         mapping,
     )
     existing = [
-        CanonicalCandidate(
+        CanonicalCandidate.from_plaintext(
+            first_name="Sarah",
             member_id="canon-001",
             last_name="johnson",
             dob="1985-04-12",

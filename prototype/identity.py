@@ -29,6 +29,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from prototype.mapping_engine import StagingRecord
+from prototype.tokenization import tokenize_dob, tokenize_name
 
 # ---------------------------------------------------------------------------
 # Tier names + defaults
@@ -63,14 +64,39 @@ class TierThresholds:
 class CanonicalCandidate:
     """Existing canonical-member summary for Tier-1 deterministic lookup.
 
-    The prototype carries normalized name + ISO dob + the partner_enrollment
-    edges (partner_id, partner_member_id) that resolve to this canonical.
+    Carries the same deterministic-non-FPE tokens (AD-009) that
+    canonical_member stores so Tier-1 lookup can join token-to-token.
+    Day-2 ingest tokenises the new record's plaintext (first_name,
+    last_name, dob) using the same HMAC scheme and compares against
+    these fields.
+
+    For unit tests that construct CanonicalCandidates directly without
+    going through Postgres, use ``CanonicalCandidate.from_plaintext``
+    so the convenience constructor handles the tokenisation.
     """
 
     member_id: str
-    last_name: str  # normalized lowercase
-    dob: str  # ISO YYYY-MM-DD
+    name_token: str
+    dob_token: str
     enrollments: list[tuple[str, str]]  # (partner_id, partner_member_id)
+
+    @classmethod
+    def from_plaintext(
+        cls,
+        *,
+        member_id: str,
+        first_name: str,
+        last_name: str,
+        dob: str,
+        enrollments: list[tuple[str, str]],
+    ) -> CanonicalCandidate:
+        """Convenience constructor — tokenise plaintext on the way in."""
+        return cls(
+            member_id=member_id,
+            name_token=tokenize_name(first_name, last_name),
+            dob_token=tokenize_dob(dob),
+            enrollments=list(enrollments),
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -245,7 +271,11 @@ def _tier1_lookup(
     existing: list[CanonicalCandidate],
 ) -> dict[str, str]:
     """For each new record, return its existing canonical member_id when
-    (partner_id, partner_member_id) AND last_name AND dob all match.
+    (partner_id, partner_member_id) AND name_token AND dob_token all match.
+
+    Tokenises the new record's plaintext (first_name, last_name, dob) so
+    the comparison is token-to-token — matching what canonical_member
+    actually stores.
     """
     by_enrollment: dict[tuple[str, str], CanonicalCandidate] = {}
     for cc in existing:
@@ -257,7 +287,9 @@ def _tier1_lookup(
         cc = by_enrollment.get((r["partner_id"], r["partner_member_id"]))
         if cc is None:
             continue
-        if cc.last_name == r["last_name"] and cc.dob == r["dob"]:
+        new_name_token = tokenize_name(r["first_name"], r["last_name"])
+        new_dob_token = tokenize_dob(r["dob"])
+        if cc.name_token == new_name_token and cc.dob_token == new_dob_token:
             matches[r["unique_id"]] = cc.member_id
     return matches
 

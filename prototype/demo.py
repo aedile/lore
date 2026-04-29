@@ -62,6 +62,7 @@ from prototype.mapping_engine import (
     map_feed,
 )
 from prototype.persistence import (
+    load_canonical_candidates,
     persist_canonical_members,
 )
 from prototype.vault import Vault
@@ -395,7 +396,11 @@ def run_day2(
 
         _emit_feed_audit(audit_chain, feed_id, dq_result, day=2)
 
-    resolution = resolve(publishable, thresholds=thresholds)
+    # Pull existing canonicals from the day-1 ingest so Tier 1 deterministic
+    # auto-merge fires for repeat partner_member_ids — instead of having
+    # day 2 re-Splink everything from scratch.
+    existing = load_canonical_candidates(conn)
+    resolution = resolve(publishable, existing_canonical=existing, thresholds=thresholds)
     persist_result = persist_canonical_members(conn, resolution=resolution, records=publishable)
 
     # SCD2 history rows for the new canonical members produced on day 2.

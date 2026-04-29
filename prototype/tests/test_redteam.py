@@ -444,8 +444,9 @@ def test_tier_1_does_not_match_on_partner_member_id_alone(tmp_path: Path) -> Non
         mapping,
     )
     existing = [
-        CanonicalCandidate(
+        CanonicalCandidate.from_plaintext(
             member_id="canon-001",
+            first_name="Sarah",
             last_name="johnson",
             dob="1985-04-12",
             enrollments=[("PARTNER_A", "A00001")],
