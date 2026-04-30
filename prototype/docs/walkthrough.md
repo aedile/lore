@@ -476,7 +476,7 @@ prototype to production into 243 stories across five phases, each
 with explicit exit criteria. That decomposition is the artifact week
 one conversations would refine, not invent.
 
-## Appendix: lens-specific framing for the panel
+## Appendix A: lens-specific framing for the panel
 
 The same eight sections, with emphasis tuned to each interviewer's
 concern.
@@ -510,3 +510,143 @@ reframes XR-005 (zero PII in logs) as a clinical-trust requirement,
 not an engineering one: the people inside the system seeing
 plaintext PII unnecessarily is itself a breach of the trust the
 member extends when they hand Lore their identity.
+
+## Appendix B: Hands-On Deliverables
+
+The prompt requested two hands-on artifacts to demonstrate the technical approach. These are excerpted from the underlying prototype implementation and the Architecture Requirements Document (ARD).
+
+### Deliverable 1: SQL DDL Schema for Key Tables
+The following DDL establishes the operational store's canonical eligibility representation. It implements the two-token-class privacy pattern (AD-009) and the attribution-neutral one-to-many partner enrollment model (BR-205).
+
+```sql
+CREATE TABLE canonical_member (
+    member_id            UUID         PRIMARY KEY,
+    state                TEXT         NOT NULL CHECK (state IN (
+                                          'PENDING_RESOLUTION',
+                                          'ELIGIBLE_ACTIVE',
+                                          'ELIGIBLE_GRACE',
+                                          'INELIGIBLE',
+                                          'DELETED'
+                                      )),
+    state_effective_from TIMESTAMPTZ  NOT NULL,
+    state_effective_to   TIMESTAMPTZ,
+    -- tokenized identifiers (per ADR-0003 keyed deterministic, per-class scope)
+    name_token           TEXT         NOT NULL,
+    dob_token            TEXT         NOT NULL,
+    -- tokenized identifiers (vault-resolvable; not joinable cross-class)
+    address_token        TEXT,
+    phone_token          TEXT,
+    email_token          TEXT,
+    ssn_token            TEXT,
+    -- metadata
+    first_seen_at        TIMESTAMPTZ  NOT NULL,
+    last_updated_at      TIMESTAMPTZ  NOT NULL,
+    tombstoned_at        TIMESTAMPTZ,
+    originating_correlation_id UUID
+);
+
+CREATE INDEX idx_canonical_member_state ON canonical_member(state);
+CREATE INDEX idx_canonical_member_anchor ON canonical_member(name_token, dob_token);
+
+CREATE TABLE partner_enrollment (
+    enrollment_id        UUID         PRIMARY KEY,
+    member_id            UUID         NOT NULL REFERENCES canonical_member(member_id),
+    partner_id           TEXT         NOT NULL,
+    partner_member_id_token TEXT      NOT NULL,
+    effective_from       DATE         NOT NULL,
+    effective_to         DATE,
+    last_seen_in_feed_at TIMESTAMPTZ  NOT NULL,
+    partner_attributes   JSONB        NOT NULL DEFAULT '{}'::jsonb,
+    UNIQUE (partner_id, partner_member_id_token, effective_from)
+);
+
+CREATE INDEX idx_partner_enrollment_member ON partner_enrollment(member_id);
+CREATE INDEX idx_partner_enrollment_active ON partner_enrollment(member_id) WHERE effective_to IS NULL;
+```
+
+### Deliverable 2: Cleansing and Inconsistency Identification Snippets
+The prompt asks for a snippet illustrating how to identify or cleanse inconsistencies. The prototype handles this in two stages: exact deduplication (SQL) and probabilistic resolution (Splink).
+
+**Part A: Within-feed deduplication (SQL)**
+Demonstrates BR-601 last-record-wins deduplication, resolving literal duplicate PII entries within a single ingestion feed before they reach the resolution engine.
+
+```sql
+WITH ranked AS (
+    SELECT
+        partner_id,
+        partner_member_id,
+        first_name, last_name, dob, ssn_last_4, address,
+        feed_line_number,
+        COUNT(*) OVER (
+            PARTITION BY partner_id, partner_member_id
+        ) AS dup_count,
+        ROW_NUMBER() OVER (
+            PARTITION BY partner_id, partner_member_id
+            ORDER BY feed_line_number DESC
+        ) AS reverse_rank
+    FROM staging_records
+    WHERE feed_id = :current_feed_id
+)
+SELECT
+    *,
+    CASE
+        WHEN dup_count > 1 AND reverse_rank = 1 THEN 'DEDUP_WINNER'
+        WHEN dup_count > 1                       THEN 'DEDUP_LOSER'
+        ELSE                                          'UNIQUE'
+    END AS dedup_status
+FROM ranked;
+```
+
+**Part B: Cross-partner identity resolution with explainable weights (Python)**
+Demonstrates probabilistic near-duplicate detection catching an inconsistency that simple deduplication misses (e.g., typo in name, differing address formats), driven by Splink.
+
+```python
+from splink.duckdb.linker import DuckDBLinker
+from splink.duckdb.comparison_library import (
+    exact_match,
+    levenshtein_at_thresholds,
+    jaro_winkler_at_thresholds,
+)
+
+# Two records refer to the same person with inconsistencies.
+records = [
+    {
+        "record_id": "PARTNER_A_001",
+        "first_name": "Sarah",   "last_name": "Johnson",
+        "dob": "1985-04-12",     "address": "123 Main St Apt 4B",
+        "ssn_last_4": "4321",
+    },
+    {
+        "record_id": "PARTNER_B_557",
+        "first_name": "Sarah",   "last_name": "Jonson",            # typo
+        "dob": "1985-04-12",     "address": "123 Main Street #4B", # format diff
+        "ssn_last_4": "4321",
+    }
+]
+
+settings = {
+    "link_type": "dedupe_only",
+    "blocking_rules_to_generate_predictions": ["l.dob = r.dob"],
+    "comparisons": [
+        exact_match("dob"),
+        jaro_winkler_at_thresholds("first_name", [0.9, 0.7]),
+        jaro_winkler_at_thresholds("last_name", [0.9, 0.7]),
+        levenshtein_at_thresholds("address", [3, 6]),
+        exact_match("ssn_last_4"),
+    ],
+    "retain_intermediate_calculation_columns": True,
+}
+
+linker = DuckDBLinker(records, settings)
+linker.estimate_u_using_random_sampling(max_pairs=1e6)
+predictions = linker.predict()
+
+def tier_outcome(match_weight: float) -> str:
+    if match_weight >= 20.0:   return "TIER_2_PROB_HIGH"      # auto-merge
+    elif match_weight >= -18.0: return "TIER_3_PROB_REVIEW"   # queue
+    else:                       return "TIER_4_DISTINCT"      # no merge
+
+for row in predictions.as_pandas_dataframe().itertuples():
+    tier = tier_outcome(row.match_weight)
+    print(f"{row.record_id_l} <-> {row.record_id_r}: weight={row.match_weight:.2f} -> {tier}")
+```
