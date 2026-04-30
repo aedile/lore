@@ -22,6 +22,8 @@ cleanup() {
 }
 trap cleanup EXIT
 
+echo ">>> Lore Eligibility — Case Study 3 panel demo (one-command driver)"
+echo ""
 echo ">>> Spawning one-shot Postgres on 127.0.0.1:5440..."
 make prototype-pg-up
 

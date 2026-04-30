@@ -16,6 +16,17 @@ The prototype is the deliverable. The strategic design and harness are the *evid
 
 The prototype is a self-contained, ~6-second end-to-end demo on synthetic data. It exercises every numbered acceptance criterion in [`docs/PROTOTYPE_PRD.md`](docs/PROTOTYPE_PRD.md) — ingestion through verification through deletion-with-suppression — with a hash-chained audit log validated at the end.
 
+**One-command panel demo:**
+
+```bash
+# Spawn Postgres, run the demo, tear down — wraps the make targets below
+# in a trap-on-exit cleanup so a single invocation runs cleanly in front
+# of an interviewer.
+./demo.sh
+```
+
+**Developer mode (drive the pieces yourself):**
+
 ```bash
 # 1. Install dependencies (one-time)
 poetry install --with dev

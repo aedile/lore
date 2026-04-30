@@ -66,6 +66,8 @@ per PRD acceptance criterion (#1 day-1 pipeline, #2 day-2 pipeline + SCD2
 + suppression, #3 tier histogram, #5 audit chain validation, #6 redaction
 scan, #7 deletion + suppression). Exits 1 if anything fails.
 
+For the one-command panel-rehearsal driver, see `./demo.sh` in the repo root.
+
 ## Tests
 
 The default `pytest` invocation collects only the production test suite under
