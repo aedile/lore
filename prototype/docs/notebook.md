@@ -296,21 +296,35 @@ SELECT state, COUNT(*) FROM canonical_member GROUP BY state;
  ELIGIBLE_ACTIVE   |   598
 ```
 
-After deletion runs:
+After the operator deletion runs, one row moves from `ELIGIBLE_ACTIVE`
+to `DELETED` (598 → 597 + 1):
 
 ```text
        state      | count
 -------------------+-------
- ELIGIBLE_ACTIVE   |   595
+ ELIGIBLE_ACTIVE   |   597
  DELETED           |     1
 ```
 
-Other tables:
+After day-2 ingest, a single net-new canonical lands for the one Tier-4
+distinct record day 2 surfaces; the rest of day-2 publishables resolve
+via Tier 1 against existing canonicals (596 Tier-1 hits, 0 inserts), and
+the deletion-fixture reintroduction is suppressed before reaching
+resolve. So 597 + 1 → 598 + 1:
 
 ```text
-match_decision    1200 rows  (one per uid per day)
+       state      | count
+-------------------+-------
+ ELIGIBLE_ACTIVE   |   598
+ DELETED           |     1
+```
+
+Other tables (post-demo):
+
+```text
+match_decision    1197 rows  (600 day-1 decisions + 597 day-2 decisions)
 partner_enrollment 600 rows
-member_history     596 rows  (SCD2: 1 deletion closure + 595 day-2 opens)
+member_history     597 rows  (1 deletion closure + 596 day-2 SCD2 opens)
 deletion_ledger      2 rows  (strict per-enrollment + broad dob+ssn4)
 review_queue         6 rows  (Tier 3 cases)
 ```
