@@ -612,6 +612,46 @@ Suite: **197 tests, ~14 seconds**. Pre-merge gate.
 
 ---
 
+## 12. What surprised me during the build
+
+Three discoveries the prototype build surfaced that the spec didn't predict:
+
+**Splink fails toward over-distinct, not over-merge, on degenerate input.**
+Initial attempts at full EM training on the synthetic data produced
+match weights of -700 bits on otherwise-reasonable pairs. Cause: the
+training subset (pairs surviving a single blocking rule) didn't contain
+representative mismatches, so Splink's `m` parameters for "All other"
+comparison levels never converged and the bf values dropped to ~1e-20.
+Skipping EM and using Splink defaults restored sane weights. The
+relevant property is the failure direction: an under-trained Splink
+biases toward Tier 4 (distinct), which is the safe direction for
+clinical trust — too many distinct identities is cleanable, too many
+merged is catastrophic.
+
+**The review queue catches genuine weak signals I didn't engineer.**
+A1 seeds two `tier3_ambiguity` doppelganger pairs deliberately. The
+demo's review queue surfaces six rows: those two engineered pairs
+plus four incidental hits — `PARTNER_B:B00290` and `PARTNER_B:B00299`
+share `ssn_last4` and have similar last names by random coincidence
+(birthday-paradox over 600 records). The queue caught them at the
+same weight band as the engineered cases. Worth knowing: the
+review-queue threshold is doing real triage work, not just surfacing
+labelled fixtures.
+
+**Broad-hash suppression forces an explicit tradeoff.**
+The deletion fixture (PARTNER_A:A00040 deleted, then re-introduced as
+PARTNER_B:B99999 with a name typo) cannot be caught by a strict
+(name, dob, partner_id, partner_member_id) hash — partner+ID and
+last_name both differ. Adding a broad (dob, ssn_last4) hash variant
+catches the reintroduction but introduces a 1-in-10000 collision rate
+inside any DOB cohort, surfaced in `test_redteam.py` as a documented
+limitation. Production needs either richer hash inputs (full SSN +
+address) or probabilistic suppression that runs Splink against the
+deletion ledger. The prototype documents the gap rather than hiding
+it.
+
+---
+
 ## How to refresh this notebook
 
 1. `./demo.sh > /tmp/demo.txt 2>&1`
