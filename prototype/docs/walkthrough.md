@@ -407,10 +407,9 @@ the highest-value questions for week one:
     SSN-last-4 is usable; if SSN coverage is much lower than
     expected, Tier 1 logic shifts.
 
-These are conversation starters, not gaps in the proposal. Every
-one is recorded as an explicit assumption in the BRD and ARD with
-a stated default; week one would tighten the defaults against
-ground truth.
+These are conversation starters, not gaps in the proposal. Each is
+recorded as an explicit assumption in the BRD and ARD with a stated
+default; week one tightens defaults against ground truth.
 
 ## Closing note
 
@@ -418,12 +417,13 @@ The prototype demonstrates the load-bearing pieces of the design on
 synthetic data. It is intentionally bounded: cloud services stubbed,
 no UI, no real partner integration, no attestation work. What it does
 prove, in code and in passing tests, is that the architectural
-decisions hold together: identity resolution produces explainable
+decisions hold together — identity resolution produces explainable
 matches, PII isolation survives the deletion path, the audit chain
 detects tampering, the verification API does not leak internal state.
-The path from this prototype to Phase 1 production is the work the
-ARD's phased delivery plan describes. The path is what week one
-conversations turn into commitments.
+The synthesis backlog (`docs/backlog/`) decomposes the path from this
+prototype to production into 243 stories across five phases, each
+with explicit exit criteria. That decomposition is the artifact week
+one conversations would refine, not invent.
 
 ## Appendix: lens-specific framing for the panel
 
