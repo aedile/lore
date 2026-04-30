@@ -309,9 +309,12 @@ surface (BR-403); failure routes the user to contact-support only.
 
 The ARD lays out five phases:
 
-- Phase 0, Foundation. BAA chain, Cloud project setup, AlloyDB
-  schema, IAM, VPC-SC perimeters, Cloud KMS keys, audit Pub/Sub
-  topic. Two weeks of plumbing.
+- Phase 0, Foundation. Empty production substrate, governance roles
+  designated, open ADRs scoped. Eighty stories in the synthesis
+  backlog spanning engineering, security, compliance, UX, and
+  infrastructure tracks. Includes Privacy Officer and Security
+  Officer designations, PHI inventory, P&P content, 42 CFR Part 2
+  decision, attestation roadmap, and BAA chain — not plumbing alone.
 - Phase 1, Single-Partner End-to-End. The full pipeline against one
   real partner. This is what the prototype scopes against.
 - Phase 2, Production Cutover. Real eligibility data, real verification
