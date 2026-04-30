@@ -65,6 +65,11 @@ schema, its freshness, and its quality SLOs. The contexts are:
   `{VERIFIED, NOT_VERIFIED}` and nothing else.
 - Deletion. Right-to-deletion executor plus suppression check on
   re-introduction.
+- Member Rights. HIPAA Privacy Rule infrastructure: NPP presentation,
+  authorization tracking, and member rights fulfillment (access,
+  amendment, accounting, restriction, confidential communications,
+  complaints). Out of prototype scope; the production system carries
+  this as a distinct bounded context per AD-029.
 - Audit. Append-only JSONL hash chain in the prototype; Pub/Sub plus
   GCS Bucket Lock in production.
 - PII Vault. Random tokens for non-joinable PII; deterministic
