@@ -275,6 +275,14 @@ client, so an attacker rotating client IDs cannot side-step it. The
 prototype does this in-memory; production wires Redis with the same
 contract.
 
+Idempotency: requests carrying the same `request_id` produce the
+same outcome on retry and do not increment the failure-window
+counter. Wayfinding's retry logic can re-issue without fear of
+exhausting the lockout budget on transient 5xx responses. The
+prototype enforces this via in-memory deduplication keyed on
+`request_id`; production wires the same contract through the
+rate-limit cache.
+
 The integration shape Wayfinding consumes:
 
 ```http
