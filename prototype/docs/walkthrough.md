@@ -157,7 +157,7 @@ The match policy is BR-101. Four tiers:
   ingest path when a partner re-sends a roster: most records resolve
   here in milliseconds via index lookups.
 - Tier 2, probabilistic high. Splink computes a match weight; weights
-  at or above the auto-merge threshold (default 5.0, tuned during
+  at or above the auto-merge threshold (default 20.0, tuned during
   prototype work) auto-merge with the per-comparison breakdown stored
   on `match_decision.score_breakdown`.
 - Tier 3, probabilistic mid. Weights between the review threshold and
@@ -200,7 +200,7 @@ Truth T00005: PARTNER_A:A00005 <-> PARTNER_B:B90000
     bf_street       = 538.947
 ```
 
-A weight of 39.926 is well above the 5.0 auto-merge threshold. The
+A weight of 39.926 is well above the 20.0 auto-merge threshold. The
 breakdown shows that DOB and SSN-last-4 dominate the decision: the
 identity holds even with the name typo because the strong identifiers
 align. That is exactly the auditable-decision property a clinical-
