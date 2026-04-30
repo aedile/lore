@@ -296,21 +296,35 @@ SELECT state, COUNT(*) FROM canonical_member GROUP BY state;
  ELIGIBLE_ACTIVE   |   598
 ```
 
-After deletion runs:
+After the operator deletion runs, one row moves from `ELIGIBLE_ACTIVE`
+to `DELETED` (598 → 597 + 1):
 
 ```text
        state      | count
 -------------------+-------
- ELIGIBLE_ACTIVE   |   595
+ ELIGIBLE_ACTIVE   |   597
  DELETED           |     1
 ```
 
-Other tables:
+After day-2 ingest, a single net-new canonical lands for the one Tier-4
+distinct record day 2 surfaces; the rest of day-2 publishables resolve
+via Tier 1 against existing canonicals (596 Tier-1 hits, 0 inserts), and
+the deletion-fixture reintroduction is suppressed before reaching
+resolve. So 597 + 1 → 598 + 1:
 
 ```text
-match_decision    1200 rows  (one per uid per day)
+       state      | count
+-------------------+-------
+ ELIGIBLE_ACTIVE   |   598
+ DELETED           |     1
+```
+
+Other tables (post-demo):
+
+```text
+match_decision    1197 rows  (600 day-1 decisions + 597 day-2 decisions)
 partner_enrollment 600 rows
-member_history     596 rows  (SCD2: 1 deletion closure + 595 day-2 opens)
+member_history     597 rows  (1 deletion closure + 596 day-2 SCD2 opens)
 deletion_ledger      2 rows  (strict per-enrollment + broad dob+ssn4)
 review_queue         6 rows  (Tier 3 cases)
 ```
@@ -595,6 +609,46 @@ broad-hash false-positive collisions, Splink degenerate inputs,
 unicode normalisation, API fuzzing.
 
 Suite: **197 tests, ~14 seconds**. Pre-merge gate.
+
+---
+
+## 12. What surprised me during the build
+
+Three discoveries the prototype build surfaced that the spec didn't predict:
+
+**Splink fails toward over-distinct, not over-merge, on degenerate input.**
+Initial attempts at full EM training on the synthetic data produced
+match weights of -700 bits on otherwise-reasonable pairs. Cause: the
+training subset (pairs surviving a single blocking rule) didn't contain
+representative mismatches, so Splink's `m` parameters for "All other"
+comparison levels never converged and the bf values dropped to ~1e-20.
+Skipping EM and using Splink defaults restored sane weights. The
+relevant property is the failure direction: an under-trained Splink
+biases toward Tier 4 (distinct), which is the safe direction for
+clinical trust — too many distinct identities is cleanable, too many
+merged is catastrophic.
+
+**The review queue catches genuine weak signals I didn't engineer.**
+A1 seeds two `tier3_ambiguity` doppelganger pairs deliberately. The
+demo's review queue surfaces six rows: those two engineered pairs
+plus four incidental hits — `PARTNER_B:B00290` and `PARTNER_B:B00299`
+share `ssn_last4` and have similar last names by random coincidence
+(birthday-paradox over 600 records). The queue caught them at the
+same weight band as the engineered cases. Worth knowing: the
+review-queue threshold is doing real triage work, not just surfacing
+labelled fixtures.
+
+**Broad-hash suppression forces an explicit tradeoff.**
+The deletion fixture (PARTNER_A:A00040 deleted, then re-introduced as
+PARTNER_B:B99999 with a name typo) cannot be caught by a strict
+(name, dob, partner_id, partner_member_id) hash — partner+ID and
+last_name both differ. Adding a broad (dob, ssn_last4) hash variant
+catches the reintroduction but introduces a 1-in-10000 collision rate
+inside any DOB cohort, surfaced in `test_redteam.py` as a documented
+limitation. Production needs either richer hash inputs (full SSN +
+address) or probabilistic suppression that runs Splink against the
+deletion ledger. The prototype documents the gap rather than hiding
+it.
 
 ---
 

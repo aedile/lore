@@ -65,6 +65,11 @@ schema, its freshness, and its quality SLOs. The contexts are:
   `{VERIFIED, NOT_VERIFIED}` and nothing else.
 - Deletion. Right-to-deletion executor plus suppression check on
   re-introduction.
+- Member Rights. HIPAA Privacy Rule infrastructure: NPP presentation,
+  authorization tracking, and member rights fulfillment (access,
+  amendment, accounting, restriction, confidential communications,
+  complaints). Out of prototype scope; the production system carries
+  this as a distinct bounded context per AD-029.
 - Audit. Append-only JSONL hash chain in the prototype; Pub/Sub plus
   GCS Bucket Lock in production.
 - PII Vault. Random tokens for non-joinable PII; deterministic
@@ -270,6 +275,14 @@ client, so an attacker rotating client IDs cannot side-step it. The
 prototype does this in-memory; production wires Redis with the same
 contract.
 
+Idempotency: requests carrying the same `request_id` produce the
+same outcome on retry and do not increment the failure-window
+counter. Wayfinding's retry logic can re-issue without fear of
+exhausting the lockout budget on transient 5xx responses. The
+prototype enforces this via in-memory deduplication keyed on
+`request_id`; production wires the same contract through the
+rate-limit cache.
+
 The integration shape Wayfinding consumes:
 
 ```http
@@ -304,9 +317,12 @@ surface (BR-403); failure routes the user to contact-support only.
 
 The ARD lays out five phases:
 
-- Phase 0, Foundation. BAA chain, Cloud project setup, AlloyDB
-  schema, IAM, VPC-SC perimeters, Cloud KMS keys, audit Pub/Sub
-  topic. Two weeks of plumbing.
+- Phase 0, Foundation. Empty production substrate, governance roles
+  designated, open ADRs scoped. Eighty stories in the synthesis
+  backlog spanning engineering, security, compliance, UX, and
+  infrastructure tracks. Includes Privacy Officer and Security
+  Officer designations, PHI inventory, P&P content, 42 CFR Part 2
+  decision, attestation roadmap, and BAA chain — not plumbing alone.
 - Phase 1, Single-Partner End-to-End. The full pipeline against one
   real partner. This is what the prototype scopes against.
 - Phase 2, Production Cutover. Real eligibility data, real verification
@@ -391,10 +407,9 @@ the highest-value questions for week one:
     SSN-last-4 is usable; if SSN coverage is much lower than
     expected, Tier 1 logic shifts.
 
-These are conversation starters, not gaps in the proposal. Every
-one is recorded as an explicit assumption in the BRD and ARD with
-a stated default; week one would tighten the defaults against
-ground truth.
+These are conversation starters, not gaps in the proposal. Each is
+recorded as an explicit assumption in the BRD and ARD with a stated
+default; week one tightens defaults against ground truth.
 
 ## Closing note
 
@@ -402,12 +417,13 @@ The prototype demonstrates the load-bearing pieces of the design on
 synthetic data. It is intentionally bounded: cloud services stubbed,
 no UI, no real partner integration, no attestation work. What it does
 prove, in code and in passing tests, is that the architectural
-decisions hold together: identity resolution produces explainable
+decisions hold together — identity resolution produces explainable
 matches, PII isolation survives the deletion path, the audit chain
 detects tampering, the verification API does not leak internal state.
-The path from this prototype to Phase 1 production is the work the
-ARD's phased delivery plan describes. The path is what week one
-conversations turn into commitments.
+The synthesis backlog (`docs/backlog/`) decomposes the path from this
+prototype to production into 243 stories across five phases, each
+with explicit exit criteria. That decomposition is the artifact week
+one conversations would refine, not invent.
 
 ## Appendix: lens-specific framing for the panel
 
