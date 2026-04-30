@@ -48,6 +48,57 @@ default.
 
 ## 2. Strategic vision
 
+```mermaid
+flowchart LR
+    Partners([Partner Feeds]):::external
+    App([Wayfinding / App]):::external
+
+    subgraph contexts[Bounded contexts]
+        direction LR
+        IP[Ingestion & Profiling]
+        IR[Identity Resolution]
+        CE[Canonical Eligibility]
+        V[Verification]:::public
+        D[Deletion]
+        MR[Member Rights]:::deferred
+    end
+
+    Vault[(PII Vault)]:::crosscutting
+    Audit[(Audit)]:::crosscutting
+
+    Partners -->|CSV / JSON drops| IP
+    IP -->|DQ-passed staging records| IR
+    IR -->|canonical members + match decisions| CE
+    IR -->|BR-703 suppression check| D
+    CE -->|tokenized name+dob lookup| V
+    V -->|VERIFIED / NOT_VERIFIED| App
+    MR -->|deletion request| CE
+    MR -->|invoke executor| D
+
+    IP -.->|tokenize| Vault
+    IR -.->|tokenize / detokenize| Vault
+    CE -.->|tokenize / detokenize| Vault
+    V -.->|detokenize| Vault
+
+    %% Bus-style edge: every context in the subgraph emits to Audit.
+    %% Drawn as subgraph -> Audit so the diagram stays readable rather
+    %% than carrying seven separate dashed lines from each context.
+    contexts -.->|events| Audit
+
+    classDef public stroke:#000,stroke-width:3px,fill:#fff
+    classDef crosscutting fill:#f0f0f0,stroke:#666
+    classDef deferred stroke:#999,stroke-dasharray:5 5,color:#666
+    classDef external fill:#e8e8e8,stroke:#444
+```
+
+*Figure 1 — Bounded contexts and data flow.* Verification is the only
+public surface (BR-401: response set is exactly `{VERIFIED,
+NOT_VERIFIED}`). PII Vault and Audit are cross-cutting sidecars; every
+context routes events to Audit and tokenizes / detokenizes through the
+vault. Member Rights is included for production completeness but is
+out of prototype scope (AD-029); it is rendered with a dashed border
+to signal "spec-visible, not demo-runnable."
+
 The eligibility system is built as a set of bounded contexts treated as
 data products, not as a monolithic warehouse. Each context owns its
 schema, its freshness, and its quality SLOs. The contexts are:
